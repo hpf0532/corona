@@ -1,0 +1,23 @@
+# 定义 web_servers 组，其中包含 3 台机器，并配置了 web1 的相关参数
+[web_servers]
+web1 ansible_ssh_port=2022 ansible_ssh_host=192.168.1.5
+192.168.1.1
+192.168.1.2
+# 定义 database_servers 组，注意写法，包含了字母 a-e 的 5 台机器
+[database_servers]
+db-[a:e].product
+# 定义 product 组，包含了之前两个组，共 8 台机器
+[product:children]
+web_servers
+database_servers
+
+# 定义 test 组，包含一台机器，注意，在实验环境里， localhost 服务器必须指定连接方式 ansible_connection=local 
+[test]
+localhost ansible_connection=local 
+
+# 为 web_servers 组指定一个参数
+[web_servers:vars]
+prot=8080
+# 为 test 组指定一个参数
+[test:vars]
+content="I am shiyanlou"

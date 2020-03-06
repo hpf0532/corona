@@ -1,0 +1,12 @@
+- hosts: all
+  tasks:
+    - name: Debug
+      debug:
+        msg: "{{ content }}"
+    - name: just test
+      debug:
+        msg: 'haha'
+    - name: ping
+      ping:
+    - name: shell test
+      shell: sleep 10
