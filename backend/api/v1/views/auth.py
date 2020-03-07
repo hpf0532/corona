@@ -5,11 +5,9 @@
 # IDE: PyCharm
 
 import jwt, datetime, bcrypt
-from flask import jsonify, request, current_app, g
+from flask import jsonify, request, current_app
 from sqlalchemy import or_
-from backend.decorators import auth_required
 from backend.utils import api_abort
-from flask.views import MethodView
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.extensions import db

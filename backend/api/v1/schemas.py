@@ -11,10 +11,11 @@ def group_schema(group):
     return {
         'id': group.id,
         'kind': 'HostGroup',
-        # 'self': url_for()
+        'self': url_for('api_v1.group', group_id=group.id, _external=True),
         'name': group.name,
         'description': group.description
     }
+
 
 def groups_schema(items, current, prev, next, pagination):
     return {

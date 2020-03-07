@@ -4,8 +4,10 @@
 # File: utils.py
 # IDE: PyCharm
 
-from flask import jsonify
+from flask import jsonify, current_app
 from werkzeug.http import HTTP_STATUS_CODES
+from backend.extensions import db
+from backend.api.v1.errors import SqlOperationError
 
 
 def api_abort(code, message=None, **kwargs):

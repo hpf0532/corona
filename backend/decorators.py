@@ -5,7 +5,6 @@
 # IDE: PyCharm
 
 import jwt
-import datetime
 from flask import request, current_app, g
 from jwt import ExpiredSignatureError
 from functools import wraps

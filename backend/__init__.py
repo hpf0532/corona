@@ -11,7 +11,6 @@ from flask import Flask
 from celery import Celery
 from logging.handlers import TimedRotatingFileHandler
 from backend.settings import config
-from backend.utils import api_abort
 from backend.extensions import db, migrate
 from backend.settings import basedir
 
@@ -79,8 +78,11 @@ def register_logging(app):
 
 
 def register_errors(app):
+    from backend.utils import api_abort
+
     @app.errorhandler(400)
     def bad_request(e):
+        print(e)
         return api_abort(400, "Bad Request")
 
     @app.errorhandler(403)

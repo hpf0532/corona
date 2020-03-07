@@ -17,3 +17,9 @@ def handle_error(err):
         return jsonify({"errors": messages}), err.code, headers
     else:
         return jsonify({"errors": messages}), err.code
+
+
+class SqlOperationError(ValueError):
+    pass
+
+
