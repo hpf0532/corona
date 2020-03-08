@@ -7,6 +7,31 @@
 from flask import url_for
 
 
+def host_schema(host):
+    return {
+        'id': host.id,
+        'kind': 'Host',
+        'self': url_for('api_v1.host', host_id=host.id, _external=True),
+        'hostname': host.hostname,
+        'ip': host.ip,
+        'port': host.port,
+        'group': host.group.name if host.group else None
+    }
+
+
+def hosts_schema(items, current, prev, next, pagination):
+    return {
+        'self': current,
+        'kind': 'HostCollection',
+        'items': [host_schema(item) for item in items],
+        'prev': prev,
+        'first': url_for('api_v1.hosts', page=1, _external=True),
+        'last': url_for('api_v1.hosts', page=pagination.pages, _external=True),
+        'next': next,
+        'count': pagination.total
+    }
+
+
 def group_schema(group):
     return {
         'id': group.id,

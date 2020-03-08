@@ -33,8 +33,8 @@ class Host(db.Model):
     __tablename__ = 'host'
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     hostname = db.Column(db.String(60), nullable=False, unique=True)
-    ip_address = db.Column(db.String(20), nullable=False, unique=True)
-    port = db.Column(db.Integer, default=22)
+    ip = db.Column(db.String(20), nullable=False, unique=True)
+    port = db.Column(db.Integer, nullable=False, default=22)
     group_id = db.Column(db.Integer, db.ForeignKey('host_group.id'), nullable=True)
     # 关系标量
     group = db.relationship('HostGroup', back_populates='hosts')
