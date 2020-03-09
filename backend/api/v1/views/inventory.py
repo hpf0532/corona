@@ -3,16 +3,18 @@
 # Date: 2020/3/6 下午4:35
 # File: inventory.py
 # IDE: PyCharm
+import os
 
 from webargs import fields
 from webargs.flaskparser import use_args, use_kwargs
 from flask import request, jsonify, current_app, url_for
 from flask.views import MethodView
 from backend.api.v1 import api_v1
-from backend.models import HostGroup, Host
-from backend.api.v1.schemas import group_schema, groups_schema, host_schema, hosts_schema
+from backend.models import HostGroup, Host, PlayBook, PlayBookDetail
+from backend.api.v1.schemas import group_schema, groups_schema, host_schema, hosts_schema, playbook_schema
 from backend.extensions import db
-from backend.utils import api_abort, validate_ip, validate_group_id
+from backend.utils import api_abort, validate_ip, validate_group_id, validate_playbook
+from backend.settings import playbook_dir
 
 # 主机组参数校验
 groups_args = {
@@ -32,6 +34,15 @@ hosts_args = {
     )),
     'port': fields.Int(missing=22),
     'group_id': fields.Int(validate=validate_group_id, missing=None)
+}
+
+# playbook参数校验
+playbooks_args = {
+    'name': fields.Str(validate=validate_playbook, required=True, error_messages=dict(
+        required="name为必填项", validator_failed="playbook不存在", invalid="请输入字符串"
+    )),
+    'author': fields.Str(validate=lambda p: len(p) > 0, required=True),
+    'information': fields.Str(validate=lambda p: len(p) > 0, required=True)
 }
 
 
@@ -162,14 +173,44 @@ class GroupsAPI(MethodView):
         response.status_code = 201
         return response
 
+
 class PlaybooksAPI(MethodView):
     # decorators = [auth_required]
 
     def get(self):
         pass
 
-    def post(self):
-        pass
+    @use_args(playbooks_args, location='json')
+    def post(self, args):
+        """创建playbook接口"""
+        playbook_file = os.path.join(playbook_dir, args['name'])
+        # 读取playbook内容
+        with open(playbook_file, encoding='utf8') as f:
+            yml = f.read()
+        playbook = PlayBook(name=args['name'], author=args['author'], information=args['information'])
+        try:
+            db.session.add(playbook)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(e)
+            return api_abort(400, "数据保存失败")
+        play_content = PlayBookDetail()
+        # commit提交后才能获取playbook的id
+        play_content.playbook_id = playbook.id
+        print(playbook.id)
+        play_content.content = yml
+        try:
+            db.session.add(play_content)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(e)
+            return api_abort(400, "数据保存失败")
+
+        response = jsonify(playbook_schema(playbook))
+        response.status_code = 201
+        return response
 
 
 api_v1.add_url_rule('/hosts/<int:host_id>', view_func=HostAPI.as_view('host'), methods=['GET', 'PUT', 'DELETE'])

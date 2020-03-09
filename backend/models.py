@@ -59,11 +59,15 @@ class PlayBook(db.Model):
     # 建立一对一关系
     detail = db.relationship('PlayBookDetail', back_populates='playbook', uselist=False)
 
+    def __repr__(self):
+        return '<PlayBook %r>' % self.name
+
 
 class PlayBookDetail(db.Model):
     __tablename__ = 'playbook_detail'
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     playbook_id = db.Column(db.Integer, db.ForeignKey('playbook.id'), nullable=False)
+    content = db.Column(db.Text)
     playbook = db.relationship('PlayBook', back_populates='detail')
 
 

@@ -49,3 +49,14 @@ def groups_schema(items):
         'items': [group_schema(item) for item in items],
         'count': len(items)
     }
+
+
+def playbook_schema(playbook):
+    return {
+        'id': playbook.id,
+        'kind': 'PlayBook',
+        'self': url_for('api_v1.host', host_id=playbook.id, _external=True),
+        'name': playbook.name,
+        'author': playbook.author,
+        'information': playbook.information,
+    }

@@ -10,6 +10,7 @@ from dotenv import load_dotenv, find_dotenv
 load_dotenv(find_dotenv())
 
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
+playbook_dir = os.path.join(basedir, 'playbooks')
 
 
 class BaseConfig:

@@ -4,11 +4,12 @@
 # File: utils.py
 # IDE: PyCharm
 
-import ipaddress
+import ipaddress, glob, os
 from flask import jsonify, current_app
 from werkzeug.http import HTTP_STATUS_CODES
 from webargs import ValidationError
 from backend.models import HostGroup
+from backend.settings import playbook_dir
 from backend.extensions import db
 
 
@@ -19,6 +20,13 @@ def validate_ip(val):
             raise ValueError
     except ValueError as e:
         raise ValidationError("非法的IP地址")
+
+
+def validate_playbook(val):
+    os.chdir(playbook_dir)
+    file_list = glob.glob('*.y*ml')
+    if val not in file_list:
+        raise ValidationError("playbook文件不存在")
 
 
 def validate_group_id(val):
