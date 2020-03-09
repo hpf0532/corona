@@ -50,6 +50,23 @@ class HostGroup(db.Model):
     hosts = db.relationship('Host', back_populates='group')
 
 
+class PlayBook(db.Model):
+    __tablename__ = 'playbook'
+    id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(48), nullable=False, unique=True)
+    author = db.Column(db.String(20), nullable=False)
+    information = db.Column(db.String(48), nullable=False, unique=True)
+    # 建立一对一关系
+    detail = db.relationship('PlayBookDetail', back_populates='playbook', uselist=False)
+
+
+class PlayBookDetail(db.Model):
+    __tablename__ = 'playbook_detail'
+    id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
+    playbook_id = db.Column(db.Integer, db.ForeignKey('playbook.id'), nullable=False)
+    playbook = db.relationship('PlayBook', back_populates='detail')
+
+
 # 创建ansible任务表
 class AnsibleTasks(db.Model):
     __tablename__ = 'ansibletask'

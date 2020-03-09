@@ -42,14 +42,10 @@ def group_schema(group):
     }
 
 
-def groups_schema(items, current, prev, next, pagination):
+def groups_schema(items):
     return {
-        'self': current,
+        'self': url_for('api_v1.groups', _external=True),
         'kind': 'GroupCollection',
         'items': [group_schema(item) for item in items],
-        'prev': prev,
-        'first': url_for('api_v1.groups', page=1, _external=True),
-        'last': url_for('api_v1.groups', page=pagination.pages, _external=True),
-        'next': next,
-        'count': pagination.total
+        'count': len(items)
     }
