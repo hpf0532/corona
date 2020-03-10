@@ -42,12 +42,12 @@ def group_schema(group):
     }
 
 
-def groups_schema(items):
+def groups_schema(groups):
     return {
         'self': url_for('api_v1.groups', _external=True),
         'kind': 'GroupCollection',
-        'items': [group_schema(item) for item in items],
-        'count': len(items)
+        'items': [group_schema(item) for item in groups],
+        'count': len(groups)
     }
 
 
@@ -55,8 +55,29 @@ def playbook_schema(playbook):
     return {
         'id': playbook.id,
         'kind': 'PlayBook',
-        'self': url_for('api_v1.host', host_id=playbook.id, _external=True),
+        'self': url_for('api_v1.playbook', playbook_id=playbook.id, _external=True),
         'name': playbook.name,
         'author': playbook.author,
         'information': playbook.information,
+    }
+
+
+def play_detail_schema(playbook):
+    return {
+        'id': playbook.id,
+        'kind': 'PlayBook',
+        'self': url_for('api_v1.playbook', playbook_id=playbook.id, _external=True),
+        'name': playbook.name,
+        'author': playbook.author,
+        'information': playbook.information,
+        'detail': playbook.detail.content
+    }
+
+
+def playbooks_schema(playbooks):
+    return {
+        'self': url_for('api_v1.playbooks', _external=True),
+        'kind': 'PlayBookCollection',
+        'items': [playbook_schema(item) for item in playbooks],
+        'count': len(playbooks)
     }

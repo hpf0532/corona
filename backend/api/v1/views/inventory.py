@@ -11,7 +11,8 @@ from flask import request, jsonify, current_app, url_for
 from flask.views import MethodView
 from backend.api.v1 import api_v1
 from backend.models import HostGroup, Host, PlayBook, PlayBookDetail
-from backend.api.v1.schemas import group_schema, groups_schema, host_schema, hosts_schema, playbook_schema
+from backend.api.v1.schemas import group_schema, groups_schema, host_schema, hosts_schema, playbook_schema, \
+    playbooks_schema, play_detail_schema
 from backend.extensions import db
 from backend.utils import api_abort, validate_ip, validate_group_id, validate_playbook
 from backend.settings import playbook_dir
@@ -174,11 +175,46 @@ class GroupsAPI(MethodView):
         return response
 
 
+class PlaybookAPI(MethodView):
+    # decorators = [auth_required]
+
+    def get(self, playbook_id):
+        '''playbook详细获取接口'''
+        playbook = PlayBook.query.get_or_404(playbook_id)
+        return jsonify(play_detail_schema(playbook))
+
+    @use_args(playbooks_args, location='json')
+    def put(self, args, playbook_id):
+        """编辑playbook接口"""
+        playbook = PlayBook.query.get_or_404(playbook_id)
+        playbook.name = args['name']
+        playbook.author = args['author']
+        playbook.information = args['information']
+
+        try:
+            db.session.add(playbook)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return api_abort(400, "数据保存失败")
+        return jsonify(playbook_schema(playbook))
+
+    def delete(self, playbook_id):
+        """删除playbook接口"""
+        playbook = PlayBook.query.get_or_404(playbook_id)
+        db.session.delete(playbook)
+        db.session.commit()
+        return '', 204
+
+
 class PlaybooksAPI(MethodView):
     # decorators = [auth_required]
 
     def get(self):
-        pass
+        """获取playbook接口"""
+        playbooks = PlayBook.query.all()
+        return jsonify(playbooks_schema(playbooks))
 
     @use_args(playbooks_args, location='json')
     def post(self, args):
@@ -217,5 +253,6 @@ api_v1.add_url_rule('/hosts/<int:host_id>', view_func=HostAPI.as_view('host'), m
 api_v1.add_url_rule('/hosts', view_func=HostsAPI.as_view('hosts'), methods=['GET', 'POST'])
 api_v1.add_url_rule('/groups/<int:group_id>', view_func=GroupAPI.as_view('group'), methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/groups', view_func=GroupsAPI.as_view('groups'), methods=['GET', 'POST'])
-api_v1.add_url_rule('/playbooks', view_func=PlaybooksAPI.as_view('playbook'), methods=['GET', 'POST'])
+api_v1.add_url_rule('/playbooks/<int:playbook_id>', view_func=PlaybookAPI.as_view('playbook'), methods=['GET', 'PUT', 'DELETE'])
+api_v1.add_url_rule('/playbooks', view_func=PlaybooksAPI.as_view('playbooks'), methods=['GET', 'POST'])
 
