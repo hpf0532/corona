@@ -80,6 +80,7 @@ class AnsibleTasks(db.Model):
     group_name = db.Column(db.String(80), nullable=True)
     playbook = db.Column(db.String(80), unique=False, nullable=True)
     extra_vars = db.Column(db.Text, nullable=True)
+    # True: 任务执行完成 False: 任务执行中
     state = db.Column(db.Boolean, default=False, nullable=False)
     ansible_result = db.Column(db.Text)
     celery_result = db.Column(db.Text)
