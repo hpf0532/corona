@@ -1,8 +1,8 @@
 # 安装启动 Redis 
-- hosts: localhost    
-  become: yes    
-  become_method: sudo
-  tasks:    
+- hosts: all
+  #  become: yes    
+  # become_method: sudo
+  tasks:
     - name: 检测redis-server文件是否存在
       file:
         path: /usr/bin/redis-server

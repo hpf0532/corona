@@ -206,25 +206,25 @@ def ansible_playbook_api(tid, hosts, playbooks, sources, extra_vars={}):
         listtasks=None,
         listtags=None,
         syntax=None
-        )
+    )
     loader = DataLoader()
     passwords = dict(vault_pass='secret')
     inventory = InventoryManager(loader=loader, sources=sources)
     # 創建默认的主机组
     inventory.add_group("all")
-    for host in hosts:
-        inventory.add_host(host, group="all")
-    # print(inventory.hosts)
+    for host, port in hosts:
+        print(host, port)
+        inventory.add_host(host, group="all", port=port)
 
     variable_manager = VariableManager(loader=loader, inventory=inventory)
-    variable_manager.extra_vars=extra_vars
+    variable_manager.extra_vars = extra_vars
     pb = MyPlaybookExecutor(tid=tid,
-                          playbooks=playbooks,
-                          inventory=inventory,
-                          variable_manager=variable_manager,
-                          loader=loader,
-                          options=options,
-                          passwords=passwords)
+                            playbooks=playbooks,
+                            inventory=inventory,
+                            variable_manager=variable_manager,
+                            loader=loader,
+                            options=options,
+                            passwords=passwords)
     # raise ValueError("1123")
     result = pb.run()
 
@@ -242,7 +242,7 @@ if __name__ == '__main__':
     # 测试 ansible-playbook_api
     # extra_vars = {'host': '192.13.2.4'}
     playbooks = ['playbooks/test_debug.yml']
-    hosts = ['192.168.1.1', 'tomcat', 'vm1']
+    hosts = [('192.168.1.1', 22), ('tomcat', 22), ('vm1', 22)]
 
     ansible_playbook_api(
             "AnsiblePlayBookApi-%s" % datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),

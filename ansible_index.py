@@ -5,6 +5,7 @@ from backend.models import AnsibleTasks
 from celery_tasks.tasks import sync_ansible_result, ansible_playbook_exec, ansible_exec, error_handler
 from backend.extensions import db
 
+
 class AnsibleOpt:
     @staticmethod
     def ansible_playbook(hosts, playbook, user=None, extra_vars={}, **kw):
@@ -16,21 +17,23 @@ class AnsibleOpt:
         celery_task = ansible_playbook_exec.apply_async(
                 (tid, hosts, playbook, extra_vars), link=sync_ansible_result.s(tid=tid),
                 link_error=error_handler.s()
-            ) # 保存 ansible 结果
+        )  # 保存 ansible 结果
         print(tid, celery_task.task_id, extra_vars, playbook, "===========")
         at = AnsibleTasks(
-                        ansible_id=tid,
-                        celery_id=celery_task.task_id,
-                        extra_vars=json.dumps(extra_vars),
-                        playbook=playbook,
-                     )
+            ansible_id=tid,
+            celery_id=celery_task.task_id,
+            extra_vars=json.dumps(extra_vars),
+            playbook=playbook,
+        )
         db.session.add(at)
         db.session.commit()
-        return {"playbook": playbook,
-                "extra_vars": extra_vars,
-                "ansible_id": tid,
-                "celery_task": celery_task.task_id,
-                "pk": at.id}
+        return {
+            "playbook": playbook,
+            "extra_vars": extra_vars,
+            "ansible_id": tid,
+            "celery_task": celery_task.task_id,
+            "pk": at.id
+        }
 
     @staticmethod
     def ansible_opt():

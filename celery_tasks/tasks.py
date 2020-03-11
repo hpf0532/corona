@@ -39,6 +39,7 @@ def save_to_db(tid):
     at.ansible_result = json.dumps([json.loads(i.decode()) for i in rlist])
     ct = a.get('celery-task-meta-%s' % at.celery_id).decode()
     at.celery_result = ct
+    at.state = True
     try:
         db.session.add(at)
         db.session.commit()
@@ -90,7 +91,6 @@ def ansible_exec(tid, groupname, tasks=[], extra_vars={}):
 def ansible_playbook_exec(self, tid, hosts, playbook, extra_vars={}):
     ansible_playbook_api(tid, hosts, ["playbooks/%s" % playbook], sources, extra_vars)
     return 'success'
-
 
 
 # 测试任务
