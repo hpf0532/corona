@@ -9,6 +9,7 @@ import logging
 import click
 from flask import Flask
 from celery import Celery
+from celery.schedules import crontab
 from logging.handlers import TimedRotatingFileHandler
 from backend.settings import config
 from backend.extensions import db, migrate
@@ -23,6 +24,12 @@ def make_celery(app):
         broker=app.config['CELERY_BROKER_URL']
     )
     celery.conf.update(app.config)
+    celery.conf.CELERYBEAT_SCHEDULE = {
+        "redis_task": {
+            "task": "celery_tasks.tasks.flush_token",
+            "schedule": crontab(minute="*/1"),
+        }
+    }
 
     class ContextTask(celery.Task):
         def __call__(self, *args, **kwargs):

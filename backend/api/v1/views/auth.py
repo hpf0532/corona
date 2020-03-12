@@ -3,14 +3,16 @@
 # Date: 2020/3/4 下午8:55
 # File: auth.py
 # IDE: PyCharm
-
+import redis
 import jwt, datetime, bcrypt
-from flask import jsonify, request, current_app
+from flask import jsonify, request, current_app, g
 from sqlalchemy import or_
 from backend.utils import api_abort
 from backend.api.v1 import api_v1
 from backend.models import User
+from backend.decorators import auth_required
 from backend.extensions import db
+from backend.settings import POOL
 
 
 def gen_token(user_id):
@@ -67,7 +69,7 @@ def login():
     payload = request.json
 
     try:
-        email = payload["email"]
+        email = payload["username"]
         password = payload["password"]
         user = User.query.filter_by(email=email).first()
 
@@ -77,6 +79,7 @@ def login():
         # 验证通过，生成token
         token = gen_token(user.id)
         response = {
+            'code': 20000,
             'user': {
                 'user_id': user.id,
                 'username': user.username,
@@ -94,6 +97,20 @@ def login():
         return api_abort(401, "登录失败")
 
 
+@api_v1.route('/user/logout', methods=['POST'])
+@auth_required
+def logout():
+    r = redis.Redis(connection_pool=POOL)
+    # 用户注销，将token加入到黑名单中
+    r.zadd("token_blacklist", {g.token: int(datetime.datetime.now().timestamp())})
+    return '', 204
+
+
+@api_v1.route('/user/info', methods=['GET'])
+def userinfo():
+    return jsonify({"data": 200})
+
+
 @api_v1.route('/test', methods=['GET'])
 # @auth_required
 def test():
@@ -103,4 +120,3 @@ def test():
     query = User.query.with_entities(func.count(User.id)).scalar()
     print(query)
     return jsonify({"status": 200})
-

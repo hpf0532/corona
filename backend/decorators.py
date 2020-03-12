@@ -4,19 +4,35 @@
 # File: decorators.py
 # IDE: PyCharm
 
-import jwt
+import jwt, redis
 from flask import request, current_app, g
 from jwt import ExpiredSignatureError
 from functools import wraps
 from backend.utils import api_abort
 from backend.models import User
+from backend.settings import POOL
+
+conn = redis.Redis(connection_pool=POOL)
+
+
+def zexist(name, value):
+    index = conn.zrank(name, value)
+    print(index)
+    if index == 0 or index:
+        return True
+    return False
 
 
 def auth_required(view):
     wraps(view)
 
     def wrapper(*args, **kwargs):
-        token = request.headers.get('Auth-Jwt')
+        token = request.headers.get('X-Token')
+        print(token)
+        # 黑名单token
+        if zexist("token_blacklist", token):
+            return api_abort(401, "token非法")
+
         # 没有token
         if not token:
             return api_abort(401, "token缺失")
@@ -36,6 +52,7 @@ def auth_required(view):
             user_id = data.get("user_id", -1)
             user = User.query.filter_by(id=user_id).one()
             g.user = user
+            g.token = token
         except Exception as e:
             current_app.logger.error(e)
             return api_abort(401, "token非法")
@@ -44,3 +61,9 @@ def auth_required(view):
         return view(*args, **kwargs)
 
     return wrapper
+
+
+if __name__ == '__main__':
+    a = zexist('token_blacklist',
+               ".eyJ1c2VyX2lkIjoyLCJleHAiOjE1ODQwNDczOTB9.DtOY3brHem0hijulzl5sGc651gl29gBU6xRQOOh0KDs")
+    print(a)

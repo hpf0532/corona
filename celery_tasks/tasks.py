@@ -12,7 +12,7 @@ else:
 import redis
 import json
 from flask import current_app
-from tools.config import REDIS_ADDR, REDIS_PD, REDIS_PORT, ansible_result_redis_db, result_db, inventory
+from backend.settings import REDIS_ADDR, REDIS_PD, REDIS_PORT, ansible_result_redis_db, result_db, inventory
 from celery.utils.log import get_task_logger
 from celery.result import AsyncResult
 from sqlalchemy.orm.exc import NoResultFound
@@ -21,6 +21,7 @@ celery_logger = get_task_logger(__name__)
 from ansible_api import ansible_playbook_api, ansible_exec_api
 from backend.models import AnsibleTasks
 from backend.extensions import db
+from backend.settings import BaseConfig, POOL
 from celery_tasks import celery, MyTask
 
 sources = inventory
@@ -90,6 +91,17 @@ def ansible_exec(tid, groupname, tasks=[], extra_vars={}):
 @celery.task(bind=True, base=MyTask)
 def ansible_playbook_exec(self, tid, hosts, playbook, extra_vars={}):
     ansible_playbook_api(tid, hosts, ["playbooks/%s" % playbook], sources, extra_vars)
+    return 'success'
+
+
+# 删除过期token定时任务
+@celery.task(bind=True, base=MyTask)
+def flush_token(self):
+    print(datetime.datetime.now())
+    now = datetime.datetime.now().timestamp()
+    expire = BaseConfig.AUTH_EXPIRE
+    conn = redis.Redis(connection_pool=POOL)
+    conn.zremrangebyscore("token_blacklist", 0, now - 5)
     return 'success'
 
 
