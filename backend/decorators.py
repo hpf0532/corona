@@ -14,7 +14,7 @@ from backend.settings import POOL
 
 conn = redis.Redis(connection_pool=POOL)
 
-
+# 判断元素是否在有序集合中
 def zexist(name, value):
     index = conn.zrank(name, value)
     print(index)

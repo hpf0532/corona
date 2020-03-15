@@ -111,6 +111,34 @@ def userinfo():
     return jsonify({"data": 200})
 
 
+@api_v1.route('/user/check_user', methods=['POST'])
+def check_user_exist():
+    """检测用户是否已注册接口"""
+    ret = {"status": 0}
+    username = request.json.get("username")
+    if not username:
+        return jsonify(ret)
+    user = User.query.filter_by(username=username).first()
+    if user:
+        ret["status"] = 1
+        return jsonify(ret)
+    return jsonify(ret)
+
+
+@api_v1.route('/user/check_email', methods=['POST'])
+def check_email_exist():
+    """检测邮箱否已注册接口"""
+    ret = {"status": 0}
+    email = request.json.get("email")
+    if not email:
+        return jsonify(ret)
+    email = User.query.filter_by(email=email).first()
+    if email:
+        ret["status"] = 1
+        return jsonify(ret)
+    return jsonify(ret)
+
+
 @api_v1.route('/test', methods=['GET'])
 # @auth_required
 def test():
