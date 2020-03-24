@@ -15,7 +15,7 @@ def host_schema(host):
         'hostname': host.hostname,
         'ip': host.ip,
         'port': host.port,
-        'group': host.group.name if host.group else None
+        'group': host.group.id if host.group else None
     }
 
 

@@ -6,10 +6,12 @@
 import os
 
 from webargs import fields
+from sqlalchemy import text
 from webargs.flaskparser import use_args, use_kwargs
 from flask import request, jsonify, current_app, url_for
 from flask.views import MethodView
 from backend.api.v1 import api_v1
+from backend.decorators import auth_required
 from backend.models import HostGroup, Host, PlayBook, PlayBookDetail
 from backend.api.v1.schemas import group_schema, groups_schema, host_schema, hosts_schema, playbook_schema, \
     playbooks_schema, play_detail_schema
@@ -70,7 +72,7 @@ class HostAPI(MethodView):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(e)
-            api_abort(400, "保存数据失败")
+            return api_abort(400, "保存数据失败")
         return jsonify(host_schema(host))
 
     def delete(self, host_id):
@@ -87,8 +89,16 @@ class HostsAPI(MethodView):
     def get(self):
         """主机列表接口"""
         page = request.args.get('page', 1, type=int)
-        per_page = current_app.config['BACK_ITEM_PER_PAGE']
-        pagination = Host.query.paginate(page, per_page)
+        limit = request.args.get('limit', type=int)
+        name = request.args.get('name')
+        group = request.args.get('group', type=int)
+        sort = request.args.get('sort', '+id')
+        per_page = limit or current_app.config['BACK_ITEM_PER_PAGE']
+        pagination = Host.query.filter(
+            # 查询搜索条件
+            Host.hostname.like("%" + name + "%") if name else text(''),
+            Host.group_id == group if group else text('')
+        ).order_by(text(sort)).paginate(page, per_page)
         items = pagination.items
         current = url_for('.hosts', page=page, _external=True)
         prev = None
@@ -196,6 +206,7 @@ class PlaybookAPI(MethodView):
             db.session.commit()
         except Exception as e:
             current_app.logger.error(e)
+            print(e)
             db.session.rollback()
             return api_abort(400, "数据保存失败")
         return jsonify(playbook_schema(playbook))
@@ -230,6 +241,7 @@ class PlaybooksAPI(MethodView):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(e)
+            print(e)
             return api_abort(400, "数据保存失败")
         play_content = PlayBookDetail()
         # commit提交后才能获取playbook的id
