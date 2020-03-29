@@ -101,7 +101,7 @@ def flush_token(self):
     now = datetime.datetime.now().timestamp()
     expire = BaseConfig.AUTH_EXPIRE
     conn = redis.Redis(connection_pool=POOL)
-    conn.zremrangebyscore("token_blacklist", 0, now - 5)
+    conn.zremrangebyscore("token_blacklist", 0, now - expire)
     return 'success'
 
 

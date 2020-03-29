@@ -77,6 +77,7 @@ class AnsibleTasks(db.Model):
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     ansible_id = db.Column(db.String(80), unique=True, nullable=True)
     celery_id = db.Column(db.String(80), unique=True, nullable=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=True)
     group_name = db.Column(db.String(80), nullable=True)
     playbook = db.Column(db.String(80), unique=False, nullable=True)
     extra_vars = db.Column(db.Text, nullable=True)
@@ -85,6 +86,13 @@ class AnsibleTasks(db.Model):
     ansible_result = db.Column(db.Text)
     celery_result = db.Column(db.Text)
     create_time = db.Column(db.DateTime, default=datetime.datetime.now)
+
+    user = db.relationship('User')
+
+    # 排序
+    __mapper_args__ = {
+        "order_by": create_time.desc(),
+    }
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.ansible_id)

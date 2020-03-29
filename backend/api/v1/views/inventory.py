@@ -14,10 +14,11 @@ from backend.api.v1 import api_v1
 from backend.decorators import auth_required
 from backend.models import HostGroup, Host, PlayBook, PlayBookDetail
 from backend.api.v1.schemas import group_schema, groups_schema, host_schema, hosts_schema, playbook_schema, \
-    playbooks_schema, play_detail_schema
+    playbooks_schema, play_detail_schema, host_group_schema
 from backend.extensions import db
 from backend.utils import api_abort, validate_ip, validate_group_id, validate_playbook
 from backend.settings import playbook_dir
+from backend.utils import model_to_dict
 
 # 主机组参数校验
 groups_args = {
@@ -50,7 +51,7 @@ playbooks_args = {
 
 
 class HostAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self, host_id):
         """获取单一主机接口"""
@@ -84,7 +85,7 @@ class HostAPI(MethodView):
 
 
 class HostsAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self):
         """主机列表接口"""
@@ -127,7 +128,7 @@ class HostsAPI(MethodView):
 
 
 class GroupAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self, group_id):
         """获取单条组信息"""
@@ -158,7 +159,7 @@ class GroupAPI(MethodView):
 
 
 class GroupsAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self):
         """获取所有主机组接口"""
@@ -186,7 +187,7 @@ class GroupsAPI(MethodView):
 
 
 class PlaybookAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self, playbook_id):
         '''playbook详细获取接口'''
@@ -220,7 +221,7 @@ class PlaybookAPI(MethodView):
 
 
 class PlaybooksAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self):
         """获取playbook接口"""
@@ -261,10 +262,38 @@ class PlaybooksAPI(MethodView):
         return response
 
 
+class HostGroupSelectAPI(MethodView):
+    # decorators = [auth_required]
+
+    def get(self):
+        data_list = []
+        group_list = HostGroup.query.all()
+        for group in group_list:
+            data_list.append(
+                {"group_id": group.id,
+                 "group_name": group.name,
+                 "hosts": host_group_schema(Host.query.filter(Host.group == group).all()),
+                 }
+            )
+        default = Host.query.filter(Host.group == None).all()
+        if default:
+            data_list.append(
+                {
+                    "group_id": 0,
+                    "group_name": "未分组",
+                    "hosts": host_group_schema(default)
+                }
+            )
+        return jsonify({
+            "data": data_list
+        })
+
+
 api_v1.add_url_rule('/hosts/<int:host_id>', view_func=HostAPI.as_view('host'), methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/hosts', view_func=HostsAPI.as_view('hosts'), methods=['GET', 'POST'])
 api_v1.add_url_rule('/groups/<int:group_id>', view_func=GroupAPI.as_view('group'), methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/groups', view_func=GroupsAPI.as_view('groups'), methods=['GET', 'POST'])
-api_v1.add_url_rule('/playbooks/<int:playbook_id>', view_func=PlaybookAPI.as_view('playbook'), methods=['GET', 'PUT', 'DELETE'])
+api_v1.add_url_rule('/playbooks/<int:playbook_id>', view_func=PlaybookAPI.as_view('playbook'),
+                    methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/playbooks', view_func=PlaybooksAPI.as_view('playbooks'), methods=['GET', 'POST'])
-
+api_v1.add_url_rule('/group_hosts', view_func=HostGroupSelectAPI.as_view('host_groups'), methods=['GET'])

@@ -1,4 +1,34 @@
-- hosts: localhost
+- hosts: all
+  environment:
+    PATH: "{{ ansible_env.PATH }}:/usr/local/node/bin"
   tasks:
-    - name: test
+    - name: ping
       ping:
+    - name: check out corona
+      git:
+        repo: git@github.com:hpf0532/corona.git
+        dest: /home/hpf/corona
+        version: master
+        accept_hostkey: yes
+        key_file: "/home/hpf/.ssh/id_rsa"
+        update: yes
+      ignore_errors: yes
+    - name: source profile
+      shell: echo $PATH
+      args:
+        executable: /bin/bash
+    - name: npm install
+      npm:
+        name: npm-script
+        path: /home/hpf/FWL-lawyer
+    - name: npm run build
+      shell: npm run build:prod
+      args:
+        chdir: /home/hpf/FWL-lawyer
+    - name: tar package
+      shell: tar -zcf dist.tar.gz ./dist/
+      args:
+        chdir: /home/hpf/FWL-lawyer
+#      shell: "cd /home/hpf/FWL-lawyer; npm install "
+#      args:
+#        executable: /bin/bash

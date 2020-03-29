@@ -27,7 +27,7 @@ def make_celery(app):
     celery.conf.CELERYBEAT_SCHEDULE = {
         "redis_task": {
             "task": "celery_tasks.tasks.flush_token",
-            "schedule": crontab(minute="*/1"),
+            "schedule": crontab(minute="10", hour='1'),
         }
     }
 

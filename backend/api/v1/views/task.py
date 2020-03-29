@@ -9,7 +9,8 @@ from flask.views import MethodView
 from backend.api.v1 import api_v1
 from backend.models import Host, PlayBook, AnsibleTasks
 from backend.utils import api_abort
-from backend.api.v1.schemas import tasks_schema, task_detail_schema
+from backend.decorators import auth_required
+from backend.api.v1.schemas import tasks_schema, task_detail_schema, flush_task_schema
 from ansible_index import AnsibleOpt
 
 
@@ -20,12 +21,13 @@ class TaskAPI(MethodView):
 
 
 class TasksAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self):
         """分页获取task任务列表"""
-        page = request.args.get('page', 1)
-        per_page = current_app.config['BACK_ITEM_PER_PAGE']
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', type=int)
+        per_page = limit or current_app.config['BACK_ITEM_PER_PAGE']
         pagination = AnsibleTasks.query.paginate(page, per_page)
         items = pagination.items
         current = url_for('.tasks', page=page, _external=True)
@@ -64,5 +66,16 @@ class TasksAPI(MethodView):
         return jsonify(ret)
 
 
+class FlushTaskAPI(MethodView):
+    # decorators = [auth_required]
+
+    def get(self, task_id):
+        print(1)
+        task = AnsibleTasks.query.get_or_404(task_id)
+        print(task)
+        return jsonify(flush_task_schema(task))
+
+
 api_v1.add_url_rule('/tasks', view_func=TasksAPI.as_view('tasks'), methods=['GET', 'POST'])
 api_v1.add_url_rule('/tasks/<int:task_id>', view_func=TaskAPI.as_view('task'), methods=['GET'])
+api_v1.add_url_rule('/flush_task/<int:task_id>', view_func=FlushTaskAPI.as_view('flush_task'), methods=['GET'])

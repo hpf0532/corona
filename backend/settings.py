@@ -50,7 +50,7 @@ class BaseConfig:
     secrets.token_urlsafe(nbytes=15)
     '''
     SECRET_KEY = os.getenv('SECRET_KEY', secret)
-    AUTH_EXPIRE = 5
+    AUTH_EXPIRE = 60 * 60 * 8
 
 
 class MySQLConfig:

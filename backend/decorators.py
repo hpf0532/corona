@@ -29,13 +29,14 @@ def auth_required(view):
     def wrapper(*args, **kwargs):
         token = request.headers.get('X-Token')
         print(token)
-        # 黑名单token
-        if zexist("token_blacklist", token):
-            return api_abort(401, "token非法")
 
         # 没有token
         if not token:
             return api_abort(401, "token缺失")
+
+        # 黑名单token
+        if zexist("token_blacklist", token):
+            return api_abort(401, "token非法")
 
         # 验证token
         try:

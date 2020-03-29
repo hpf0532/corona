@@ -82,14 +82,14 @@ def playbooks_schema(playbooks):
         'count': len(playbooks)
     }
 
-
 def task_schema(task):
     return {
         'id': task.id,
         'kind': 'Task',
         'self': url_for('api_v1.task', task_id=task.id, _external=True),
         'ansible_id': task.ansible_id,
-        'aplaybook': task.playbook,
+        'playbook': task.playbook,
+        'user': task.user.username if task.user else None,
         'state': task.state,
         'create_time': int(task.create_time.timestamp())
     }
@@ -102,9 +102,10 @@ def task_detail_schema(task):
         'self': url_for('api_v1.task', task_id=task.id, _external=True),
         'ansible_id': task.ansible_id,
         'celery_id': task.celery_id,
-        'extra_vars': json.loads(task.extra_vars),
-        'ansible_result': json.loads(task.ansible_result),
-        'celery_result': json.loads(task.celery_result),
+        'user': task.user.username if task.user else None,
+        'extra_vars': json.loads(task.extra_vars) if task.extra_vars else None,
+        'ansible_result': json.loads(task.ansible_result) if task.ansible_result else None,
+        'celery_result': json.loads(task.celery_result) if task.celery_result else None,
         'playbook': task.playbook,
         'state': task.state,
         'create_time': int(task.create_time.timestamp())
@@ -122,3 +123,22 @@ def tasks_schema(items, current, prev, next, pagination):
         'next': next,
         'count': pagination.total
     }
+
+
+def flush_task_schema(task):
+    return {
+        'ansible_result': json.loads(task.ansible_result) if task.ansible_result else None,
+        'celery_result': json.loads(task.celery_result) if task.celery_result else None,
+    }
+
+
+def host_group_schema(hosts):
+    host_list = []
+    for host in hosts:
+        host_list.append(
+            {
+                "host_id": host.id,
+                "hostname": host.hostname
+            }
+        )
+    return host_list
