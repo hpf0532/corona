@@ -1,0 +1,22 @@
+---
+tomcat_version: "8.5.20"
+tmpdir: "/tmp"
+workdir: "/opt"
+mem_size: 200
+tomcat_app:
+  tomcat_web_mojiedai:
+    name: tomcat_web_mojiedai
+    tomcat_app_root: "/opt/tomcat_web_mojiedai"
+    tomcat_user: www
+    tomcat_http_port: 18080
+    tomcat_ajp_port: 18009
+    tomcat_shutdown_port: 18005
+    tomcat_url_root: "/"
+  tomcat_web_qiandada:
+    name: tomcat_web_qiandada
+    tomcat_app_root: "/opt/tomcat_web_qiandada"
+    tomcat_user: www
+    tomcat_http_port: 28080
+    tomcat_ajp_port: 28009
+    tomcat_shutdown_port: 28005
+    tomcat_url_root: "/"

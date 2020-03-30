@@ -125,3 +125,5 @@ yarn-error.log*
 *.ntvs*
 *.njsproj
 *.sln
+*.retry
+*.gz

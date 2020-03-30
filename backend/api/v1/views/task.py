@@ -46,16 +46,24 @@ class TasksAPI(MethodView):
         print(request.json)
         exec_hosts = []
         payload = request.json
-        hosts = Host.query.filter(Host.id.in_(payload["hosts"])).all()
+        try:
+            host = payload["hosts"]
+            playbook = payload["playbook"]
+            extra_vars = payload["extra_vars"]
+            if not host or not playbook:
+                return api_abort(400, "参数有误")
+        except Exception as e:
+            return api_abort(400, "参数有误")
+        hosts = Host.query.filter(Host.id.in_(host)).all()
         print(hosts)
         if not hosts:
             return api_abort(400, "参数有误")
         for host in hosts:
             exec_hosts.append((host.ip, host.port))
 
-        playbook = PlayBook.query.get_or_404(payload['playbook'])
+        playbook = PlayBook.query.get_or_404(playbook)
         playbook = playbook.name
-        extra_vars = payload["extra_vars"]
+        print(type(extra_vars))
         print(extra_vars)
         print(playbook)
 
@@ -67,7 +75,7 @@ class TasksAPI(MethodView):
 
 
 class FlushTaskAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self, task_id):
         print(1)

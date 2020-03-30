@@ -29,6 +29,7 @@ class ResultCallback(CallbackBase):
         self.r = redis.Redis(host=REDIS_ADDR, port=REDIS_PORT, password=REDIS_PD, db=ansible_result_redis_db)
 
     def _write_to_save(self, data):  # 写入 redis
+        print(data)
         msg = json.dumps(data, ensure_ascii=False)
         self.r.rpush(self.id, msg)
         # 为了方便查看，我们 print 写入 redis 的字符串的前 50 个字符
@@ -49,6 +50,7 @@ class ResultCallback(CallbackBase):
         if "ansible_facts" in result._result.keys():    # 我们忽略 setup 操作的结果
             print("\33[32mSetUp 操作，不Save结果\33[0m")
         else:
+            print(result)
             self._write_to_save({
                 "host": host.name,
                 "result": result._result,
@@ -225,6 +227,13 @@ def ansible_playbook_api(tid, hosts, playbooks, sources, extra_vars={}):
                             loader=loader,
                             options=options,
                             passwords=passwords)
+    # pb = PlaybookExecutor(
+    #                         playbooks=playbooks,
+    #                         inventory=inventory,
+    #                         variable_manager=variable_manager,
+    #                         loader=loader,
+    #                         options=options,
+    #                         passwords=passwords)
     # raise ValueError("1123")
     result = pb.run()
 
@@ -234,17 +243,19 @@ if __name__ == '__main__':
     extra_vars = {'content': '这个参数从外部传入'}
     # 测试 ansible_api
     tasks = []
-    tasks.append(dict(action=dict(module='debug', args=dict(msg='{{ content }}'))))
+    # tasks.append(dict(action=dict(module='debug', args=dict(msg='{{ content }}'))))
+    tasks.append(dict(action=dict(module='shell', args='ssh root@api ifconfig')))
+
     ansible_exec_api(
-            "AnsibleApi-%s" % datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
-            "localhost", tasks, sources, extra_vars
-        )
+        "AnsibleApi-%s" % datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+        "localhost", tasks, sources, extra_vars
+    )
     # 测试 ansible-playbook_api
-    # extra_vars = {'host': '192.13.2.4'}
-    playbooks = ['playbooks/test_debug.yml']
-    hosts = [('192.168.1.1', 22), ('tomcat', 22), ('vm1', 22)]
+    extra_vars = {'host': '192.13.2.4'}
+    playbooks = ['playbooks/test.yml']
+    hosts = [('127.0.0.1', 22)]
 
     ansible_playbook_api(
-            "AnsiblePlayBookApi-%s" % datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
-            hosts, playbooks, sources, extra_vars
-        )
+        "AnsiblePlayBookApi-%s" % datetime.datetime.now().strftime("%Y%m%d-%H%M%S"),
+        hosts, playbooks, sources, extra_vars
+    )

@@ -1,0 +1,40 @@
+---
+- name: unarchive tomcat pkg
+  unarchive: src=apache-tomcat-{{ tomcat_version }}.tar.gz dest={{ tmpdir }}
+
+- name: install tomcat apps
+  command: cp -r {{ tmpdir }}/apache-tomcat-{{ tomcat_version }} {{ workdir }}/{{ item.key }}
+  with_dict:
+    - "{{ tomcat_app }}"
+
+- name: add user www
+  user: name=www state=present
+
+- name: change owner for tomcat
+  file: dest={{ workdir }}/{{ item.key }} owner=www group=www recurse=yes
+  with_dict:
+    - "{{ tomcat_app }}"
+
+- name: remove webapps
+  file: dest={{ workdir }}/{{ item.key }}/webapps/ state=absent
+  with_dict:
+    - "{{ tomcat_app }}"
+
+- name: touch webapps
+  file: path={{ workdir }}/{{ item.key }}/webapps/ state=directory owner=www group=www mode=0755
+  #   file: path={{ workdir }}/{{ item }}/webapps/ state=directory  mode=0755
+  with_dict:
+    - "{{ tomcat_app }}"
+
+- name: change server.xml
+  template: src=server.xml.j2 dest={{ workdir }}/{{ item.key }}/conf/server.xml
+  with_dict:
+    - "{{ tomcat_app }}"
+
+- name: change catalina.sh
+  template: src=catalina.sh.j2 dest={{ workdir }}/{{ item.key }}/bin/catalina.sh
+  with_dict:
+    - "{{ tomcat_app }}"
+
+- name: remove soft pkg
+  file: path={{ tmpdir }}/apache-tomcat-{{ tomcat_version }} state=absent
