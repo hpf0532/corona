@@ -71,6 +71,30 @@ class PlayBookDetail(db.Model):
     playbook = db.relationship('PlayBook', back_populates='detail')
 
 
+class Environment(db.Model):
+    __tablename__ = 'environment'
+    id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(20), nullable=False)
+
+    def __repr__(self):
+        return '<Environment %r>' % self.name
+
+
+class Options(db.Model):
+    __tablename__ = 'options'
+    id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(48), nullable=False)
+    content = db.Column(db.Text, nullable=True)
+    playbook_id = db.Column(db.Integer, db.ForeignKey('playbook.id'), nullable=False)
+    env_id = db.Column(db.Integer, db.ForeignKey('environment.id'))
+
+    playbook = db.relationship('PlayBook')
+    env = db.relationship('Environment')
+
+    def __repr__(self):
+        return '<Options %r>' % self.name
+
+
 # 创建ansible任务表
 class AnsibleTasks(db.Model):
     __tablename__ = 'ansibletask'

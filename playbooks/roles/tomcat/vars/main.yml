@@ -1,14 +1,14 @@
 #---
-tomcat_version: "8.5.20"
-tmpdir: "/tmp"
-workdir: "/opt"
-mem_size: 400
-tomcat_app:
-     tomcat_into_report:
-          name: tomcat_into_report
-          tomcat_app_root: "/opt/tomcat_into_report"
-          tomcat_user: www
-          tomcat_http_port: 9490
-          tomcat_ajp_port: 9409
-          tomcat_shutdown_port: 9405
-          tomcat_url_root: "/"
+#tomcat_version: "8.5.20"
+#tmpdir: "/tmp"
+#workdir: "/opt"
+#mem_size: 400
+#tomcat_app:
+#     tomcat_into_report:
+#          name: tomcat_into_report
+#          tomcat_app_root: "/opt/tomcat_into_report"
+#          tomcat_user: www
+#          tomcat_http_port: 9490
+#          tomcat_ajp_port: 9409
+#          tomcat_shutdown_port: 9405
+#          tomcat_url_root: "/"

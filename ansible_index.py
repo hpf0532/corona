@@ -1,6 +1,7 @@
 import json
 import datetime
 import random, string
+from flask import g
 from backend.models import AnsibleTasks
 from celery_tasks.tasks import sync_ansible_result, ansible_playbook_exec, ansible_exec, error_handler
 from backend.extensions import db
@@ -22,6 +23,7 @@ class AnsibleOpt:
         at = AnsibleTasks(
             ansible_id=tid,
             celery_id=celery_task.task_id,
+            user=g.user,
             extra_vars=json.dumps(extra_vars),
             playbook=playbook,
         )

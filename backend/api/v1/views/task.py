@@ -3,18 +3,114 @@
 # Date: 2020/3/10 下午4:01
 # File: task.py
 # IDE: PyCharm
-
+import json
+from webargs import fields
+from webargs.flaskparser import use_args
 from flask import request, jsonify, current_app, url_for
 from flask.views import MethodView
 from backend.api.v1 import api_v1
-from backend.models import Host, PlayBook, AnsibleTasks
-from backend.utils import api_abort
+from backend.extensions import db
+from backend.models import Host, PlayBook, AnsibleTasks, Options
+from backend.utils import api_abort, validate_env_id, validate_playbook_id, validate_json
 from backend.decorators import auth_required
-from backend.api.v1.schemas import tasks_schema, task_detail_schema, flush_task_schema
+from backend.api.v1.schemas import tasks_schema, task_detail_schema, flush_task_schema, option_schema, options_schema
 from ansible_index import AnsibleOpt
+
+# 校验option参数
+options_args = {
+    'name': fields.Str(validate=lambda p: len(p) > 0, required=True, error_messages=dict(
+        required="option名称为必填项", validator_failed="name不能为空", invalid="请输入字符串"
+    )),
+    'playbook_id': fields.Int(validate=validate_playbook_id, required=True, error_messages=dict(
+        required="playbook必填项"
+    )),
+    'content': fields.Dict(required=True),
+    'env_id': fields.Int(validate=validate_env_id, missing=None)
+}
+
+
+class PlayBookOptionAPI(MethodView):
+    # decorators = [auth_required]
+
+    def get(self, option_id):
+        """获取单一主机接口"""
+        option = Options.query.get_or_404(option_id)
+        return jsonify(option_schema(option))
+
+    @use_args(options_args, location='json')
+    def put(self, args, option_id):
+        """编辑主机接口"""
+        option = Options.query.get_or_404(option_id)
+        print(option)
+        option.name = args['name']
+        option.content = json.dumps(args['content'])
+        option.playbook_id = args['playbook_id']
+        option.env_id = args.get('env_id')
+
+        try:
+            db.session.add(option)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            current_app.logger.error(e)
+            return api_abort(400, "保存数据失败")
+        return jsonify(option_schema(option))
+
+    def delete(self, option_id):
+        """删除playbook选项接口"""
+        option = Options.query.get_or_404(option_id)
+        db.session.delete(option)
+        db.session.commit()
+        return '', 204
+
+
+class PlayBookOptionsAPI(MethodView):
+    """playbook参数列表接口"""
+
+    # decorators = [auth_required]
+
+    def get(self):
+        page = request.args.get('page', 1, type=int)
+        limit = request.args.get('limit', type=int)
+        per_page = limit or current_app.config['BACK_ITEM_PER_PAGE']
+        pagination = Options.query.paginate(page, per_page)
+        items = pagination.items
+        current = url_for('.options', page=page, _external=True)
+        prev = None
+        if pagination.has_prev:
+            prev = url_for('.options', page=page - 1, _external=True)
+        next = None
+        if pagination.has_next:
+            next = url_for('.options', page=page + 1, _external=True)
+
+        print(items)
+        return jsonify(options_schema(items, current, prev, next, pagination))
+
+    @use_args(options_args, location='json')
+    def post(self, args):
+        print(args)
+        option = Options()
+        option.name = args['name']
+        option.content = json.dumps(args['content'])
+        option.playbook_id = args['playbook_id']
+        option.env_id = args.get('env_id')
+
+        try:
+            db.session.add(option)
+            db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            print(e)
+            current_app.logger.error(e)
+            return api_abort(400, "数据保存失败")
+        response = jsonify(option_schema(option))
+        response.status_code = 201
+        return response
 
 
 class TaskAPI(MethodView):
+    decorators = [auth_required]
+
     def get(self, task_id):
         task = AnsibleTasks.query.get_or_404(task_id)
         return jsonify(task_detail_schema(task))
@@ -38,7 +134,7 @@ class TasksAPI(MethodView):
         if pagination.has_next:
             next = url_for('.tasks', page=page + 1, _external=True)
 
-        print(items)
+        # print(items)
         return jsonify(tasks_schema(items, current, prev, next, pagination))
 
     def post(self):
@@ -84,6 +180,9 @@ class FlushTaskAPI(MethodView):
         return jsonify(flush_task_schema(task))
 
 
+api_v1.add_url_rule('/options', view_func=PlayBookOptionsAPI.as_view('options'), methods=['GET', 'POST'])
+api_v1.add_url_rule('/options/<int:option_id>', view_func=PlayBookOptionAPI.as_view('option'),
+                    methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/tasks', view_func=TasksAPI.as_view('tasks'), methods=['GET', 'POST'])
 api_v1.add_url_rule('/tasks/<int:task_id>', view_func=TaskAPI.as_view('task'), methods=['GET'])
 api_v1.add_url_rule('/flush_task/<int:task_id>', view_func=FlushTaskAPI.as_view('flush_task'), methods=['GET'])

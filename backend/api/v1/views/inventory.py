@@ -31,7 +31,7 @@ groups_args = {
 # 主机参数校验
 hosts_args = {
     'hostname': fields.Str(validate=lambda p: len(p) > 0, required=True, error_messages=dict(
-        required="主机组名为必填项", validator_failed="组名不能为空", invalid="请输入字符串"
+        required="主机名为必填项", validator_failed="组名不能为空", invalid="请输入字符串"
     )),
     'ip': fields.Str(validate=validate_ip, required=True, error_messages=dict(
         required="ip名为必填项", invalid="请输入字符串"
@@ -114,6 +114,7 @@ class HostsAPI(MethodView):
     @use_args(hosts_args, location='json')
     def post(self, args):
         """新建主机接口"""
+        print(args)
         host = Host(hostname=args["hostname"], ip=args['ip'], port=args['port'], group_id=args['group_id'])
         try:
             db.session.add(host)

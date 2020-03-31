@@ -4,11 +4,11 @@
 # File: utils.py
 # IDE: PyCharm
 
-import ipaddress, glob, os
+import ipaddress, glob, json, os
 from flask import jsonify, current_app
 from werkzeug.http import HTTP_STATUS_CODES
 from webargs import ValidationError
-from backend.models import HostGroup
+from backend.models import HostGroup, PlayBook, Environment
 from backend.settings import playbook_dir
 from backend.extensions import db
 
@@ -22,7 +22,16 @@ def validate_ip(val):
         raise ValidationError("非法的IP地址")
 
 
+def validate_json(val):
+    try:
+        print(val)
+        json.loads(val)
+    except ValueError:
+        raise ValidationError("json格式错误")
+
+
 def validate_playbook(val):
+    """校验playbook文件是否存在"""
     os.chdir(playbook_dir)
     file_list = glob.glob('*.y*ml')
     if val not in file_list:
@@ -33,6 +42,18 @@ def validate_group_id(val):
     gid = HostGroup.query.get(val)
     if not gid:
         raise ValidationError("主机组不存在")
+
+
+def validate_playbook_id(val):
+    pid = PlayBook.query.get(val)
+    if not pid:
+        raise ValidationError("playbook不存在")
+
+
+def validate_env_id(val):
+    pid = Environment.query.get(val)
+    if not pid:
+        raise ValidationError("环境参数错误")
 
 
 def api_abort(code, message=None, **kwargs):

@@ -142,3 +142,28 @@ def host_group_schema(hosts):
             }
         )
     return host_list
+
+
+def option_schema(option):
+    return {
+        'id': option.id,
+        'kind': 'Option',
+        'self': url_for('api_v1.option', option_id=option.id, _external=True),
+        'name': option.name,
+        'content': option.content,
+        'playbook': option.playbook.id if option.playbook else None,
+        'env': option.env.id if option.env else None
+    }
+
+
+def options_schema(items, current, prev, next, pagination):
+    return {
+        'self': current,
+        'kind': 'OptionCollection',
+        'items': [option_schema(item) for item in items],
+        'prev': prev,
+        'first': url_for('api_v1.options', page=1, _external=True),
+        'last': url_for('api_v1.options', page=pagination.pages, _external=True),
+        'next': next,
+        'count': pagination.total
+    }
