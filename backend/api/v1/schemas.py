@@ -59,6 +59,7 @@ def playbook_schema(playbook):
         'name': playbook.name,
         'author': playbook.author,
         'information': playbook.information,
+        'is_env': playbook.is_env
     }
 
 
@@ -166,4 +167,31 @@ def options_schema(items, current, prev, next, pagination):
         'last': url_for('api_v1.options', page=pagination.pages, _external=True),
         'next': next,
         'count': pagination.total
+    }
+
+
+def task_options_schema(items):
+    return {
+        'self': url_for('api_v1.task_options', _external=True),
+        'kind': 'TaskOptionsCollection',
+        'items': [option_schema(item) for item in items],
+        'count': len(items)
+    }
+
+
+def env_schema(env):
+    """环境信息"""
+    return {
+        'id': env.id,
+        'kind': 'Env',
+        'name': env.name,
+    }
+
+
+def envs_schema(envs):
+    return {
+        'self': url_for('api_v1.envs', _external=True),
+        'kind': 'EnvCollection',
+        'items': [env_schema(item) for item in envs],
+        'count': len(envs)
     }

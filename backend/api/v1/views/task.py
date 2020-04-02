@@ -4,16 +4,18 @@
 # File: task.py
 # IDE: PyCharm
 import json
+from sqlalchemy import text
 from webargs import fields
 from webargs.flaskparser import use_args
 from flask import request, jsonify, current_app, url_for
 from flask.views import MethodView
 from backend.api.v1 import api_v1
 from backend.extensions import db
-from backend.models import Host, PlayBook, AnsibleTasks, Options
+from backend.models import Host, PlayBook, AnsibleTasks, Options, Environment
 from backend.utils import api_abort, validate_env_id, validate_playbook_id, validate_json
 from backend.decorators import auth_required
-from backend.api.v1.schemas import tasks_schema, task_detail_schema, flush_task_schema, option_schema, options_schema
+from backend.api.v1.schemas import tasks_schema, task_detail_schema, flush_task_schema, option_schema, options_schema, \
+    envs_schema, task_options_schema
 from ansible_index import AnsibleOpt
 
 # 校验option参数
@@ -30,7 +32,7 @@ options_args = {
 
 
 class PlayBookOptionAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self, option_id):
         """获取单一主机接口"""
@@ -66,14 +68,22 @@ class PlayBookOptionAPI(MethodView):
 
 class PlayBookOptionsAPI(MethodView):
     """playbook参数列表接口"""
-
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self):
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', type=int)
+        name = request.args.get('name')
+        playbook = request.args.get('playbook', type=int)
+        env = request.args.get('env', type=int)
+        sort = request.args.get('sort', '+id')
         per_page = limit or current_app.config['BACK_ITEM_PER_PAGE']
-        pagination = Options.query.paginate(page, per_page)
+        pagination = Options.query.filter(
+            # 查询搜索条件
+            Options.name.like("%" + name + "%") if name else text(''),
+            Options.playbook_id == playbook if playbook else text(''),
+            Options.env_id == env if env else text('')
+        ).order_by(text(sort)).paginate(page, per_page)
         items = pagination.items
         current = url_for('.options', page=page, _external=True)
         prev = None
@@ -106,6 +116,21 @@ class PlayBookOptionsAPI(MethodView):
         response = jsonify(option_schema(option))
         response.status_code = 201
         return response
+
+
+class TaskOptionsAPI(MethodView):
+    decorators = [auth_required]
+
+    def get(self):
+        print(request.args)
+        playbook = request.args.get('playbook', type=int)
+        env = request.args.get('env', type=int)
+        options = Options.query.filter(
+            Options.playbook_id == playbook if playbook else text(''),
+            Options.env_id == env if env else text('')
+        ).all()
+
+        return jsonify(task_options_schema(options))
 
 
 class TaskAPI(MethodView):
@@ -180,9 +205,20 @@ class FlushTaskAPI(MethodView):
         return jsonify(flush_task_schema(task))
 
 
+class EnvsAPI(MethodView):
+    decorators = [auth_required]
+
+    def get(self):
+        """获取所有主机组接口"""
+        envs = Environment.query.all()
+        return jsonify(envs_schema(envs))
+
+
+api_v1.add_url_rule('/envs', view_func=EnvsAPI.as_view('envs'), methods=['GET'])
 api_v1.add_url_rule('/options', view_func=PlayBookOptionsAPI.as_view('options'), methods=['GET', 'POST'])
 api_v1.add_url_rule('/options/<int:option_id>', view_func=PlayBookOptionAPI.as_view('option'),
                     methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/tasks', view_func=TasksAPI.as_view('tasks'), methods=['GET', 'POST'])
 api_v1.add_url_rule('/tasks/<int:task_id>', view_func=TaskAPI.as_view('task'), methods=['GET'])
 api_v1.add_url_rule('/flush_task/<int:task_id>', view_func=FlushTaskAPI.as_view('flush_task'), methods=['GET'])
+api_v1.add_url_rule('/task_options', view_func=TaskOptionsAPI.as_view('task_options'), methods=['GET'])

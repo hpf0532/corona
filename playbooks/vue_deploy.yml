@@ -30,7 +30,7 @@
         name: npm-script
         path: /home/hpf/FWL-lawyer
     - name: npm run build
-      shell: npm run build:prod
+      shell: "{{ npm_cmd }}"
       args:
         chdir: /home/hpf/FWL-lawyer
     - name: tar package

@@ -52,6 +52,9 @@ class BaseConfig:
     SECRET_KEY = os.getenv('SECRET_KEY', secret)
     AUTH_EXPIRE = 60 * 60 * 8
 
+    CELERY_BROKER_URL = BROKER
+    CELERY_RESULT_BACKEND = BACKEND
+
 
 class MySQLConfig:
     MYSQL_USERNAME = os.getenv('MYSQL_USER')
@@ -66,9 +69,7 @@ class DevelopmentConfig(BaseConfig):
     # CELERY_TASK_ALWAYS_EAGER = True
     # CELERY_TASK_EAGER_PROPAGATES = True
     # CELERY_BROKER_URL = "redis://127.0.0.1:6379/3"
-    CELERY_BROKER_URL = BROKER
     # CELERY_RESULT_BACKEND = "redis://127.0.0.1:6379/4"
-    CELERY_RESULT_BACKEND = BACKEND
     SQLALCHEMY_DATABASE_URI = f'mysql+pymysql://{MySQLConfig.MYSQL_USERNAME}:{MySQLConfig.MYSQL_PASSWORD}' \
                               f'@{MySQLConfig.MYSQL_HOST}/{MySQLConfig.MYSQL_DATABASE}?charset={MySQLConfig.MYSQL_CHARSET}'
 

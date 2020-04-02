@@ -46,7 +46,8 @@ playbooks_args = {
         required="name为必填项", validator_failed="playbook不存在", invalid="请输入字符串"
     )),
     'author': fields.Str(validate=lambda p: len(p) > 0, required=True),
-    'information': fields.Str(validate=lambda p: len(p) > 0, required=True)
+    'information': fields.Str(validate=lambda p: len(p) > 0, required=True),
+    'is_env': fields.Boolean(missing=False)
 }
 
 
@@ -198,10 +199,17 @@ class PlaybookAPI(MethodView):
     @use_args(playbooks_args, location='json')
     def put(self, args, playbook_id):
         """编辑playbook接口"""
+        playbook_file = os.path.join(playbook_dir, args['name'])
+        # 读取playbook内容
+        with open(playbook_file, encoding='utf8') as f:
+            yml = f.read()
+
         playbook = PlayBook.query.get_or_404(playbook_id)
         playbook.name = args['name']
         playbook.author = args['author']
         playbook.information = args['information']
+        playbook.is_env = args['is_env']
+        playbook.detail.content = yml
 
         try:
             db.session.add(playbook)
@@ -236,7 +244,8 @@ class PlaybooksAPI(MethodView):
         # 读取playbook内容
         with open(playbook_file, encoding='utf8') as f:
             yml = f.read()
-        playbook = PlayBook(name=args['name'], author=args['author'], information=args['information'])
+        playbook = PlayBook(name=args['name'], author=args['author'], information=args['information'],
+                            is_env=args['is_env'])
         try:
             db.session.add(playbook)
             db.session.commit()
