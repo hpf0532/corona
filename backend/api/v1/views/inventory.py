@@ -299,6 +299,7 @@ class HostGroupSelectAPI(MethodView):
         })
 
 
+# 添加路由
 api_v1.add_url_rule('/hosts/<int:host_id>', view_func=HostAPI.as_view('host'), methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/hosts', view_func=HostsAPI.as_view('hosts'), methods=['GET', 'POST'])
 api_v1.add_url_rule('/groups/<int:group_id>', view_func=GroupAPI.as_view('group'), methods=['GET', 'PUT', 'DELETE'])

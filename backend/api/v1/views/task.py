@@ -35,13 +35,13 @@ class PlayBookOptionAPI(MethodView):
     decorators = [auth_required]
 
     def get(self, option_id):
-        """获取单一主机接口"""
+        """获取单一playbook参数接口"""
         option = Options.query.get_or_404(option_id)
         return jsonify(option_schema(option))
 
     @use_args(options_args, location='json')
     def put(self, args, option_id):
-        """编辑主机接口"""
+        """编辑playbook参数接口"""
         option = Options.query.get_or_404(option_id)
         print(option)
         option.name = args['name']
@@ -59,7 +59,7 @@ class PlayBookOptionAPI(MethodView):
         return jsonify(option_schema(option))
 
     def delete(self, option_id):
-        """删除playbook选项接口"""
+        """删除playbook参数接口"""
         option = Options.query.get_or_404(option_id)
         db.session.delete(option)
         db.session.commit()
@@ -98,7 +98,7 @@ class PlayBookOptionsAPI(MethodView):
 
     @use_args(options_args, location='json')
     def post(self, args):
-        print(args)
+        """新建playbook任务参数"""
         option = Options()
         option.name = args['name']
         option.content = json.dumps(args['content'])
@@ -122,7 +122,7 @@ class TaskOptionsAPI(MethodView):
     decorators = [auth_required]
 
     def get(self):
-        print(request.args)
+        """任务参数接口"""
         playbook = request.args.get('playbook', type=int)
         env = request.args.get('env', type=int)
         options = Options.query.filter(
@@ -137,6 +137,7 @@ class TaskAPI(MethodView):
     decorators = [auth_required]
 
     def get(self, task_id):
+        """获取任务详细信息接口"""
         task = AnsibleTasks.query.get_or_404(task_id)
         return jsonify(task_detail_schema(task))
 
@@ -159,7 +160,6 @@ class TasksAPI(MethodView):
         if pagination.has_next:
             next = url_for('.tasks', page=page + 1, _external=True)
 
-        # print(items)
         return jsonify(tasks_schema(items, current, prev, next, pagination))
 
     def post(self):
@@ -184,11 +184,6 @@ class TasksAPI(MethodView):
 
         playbook = PlayBook.query.get_or_404(playbook)
         playbook = playbook.name
-        print(type(extra_vars))
-        print(extra_vars)
-        print(playbook)
-
-        print(exec_hosts)
 
         ret = AnsibleOpt.ansible_playbook(exec_hosts, playbook, extra_vars=extra_vars)
 
@@ -199,7 +194,7 @@ class FlushTaskAPI(MethodView):
     decorators = [auth_required]
 
     def get(self, task_id):
-        print(1)
+        """轮询task结果接口"""
         task = AnsibleTasks.query.get_or_404(task_id)
         print(task)
         return jsonify(flush_task_schema(task))
@@ -209,11 +204,12 @@ class EnvsAPI(MethodView):
     decorators = [auth_required]
 
     def get(self):
-        """获取所有主机组接口"""
+        """获取所有环境信息接口"""
         envs = Environment.query.all()
         return jsonify(envs_schema(envs))
 
 
+# 添加路由
 api_v1.add_url_rule('/envs', view_func=EnvsAPI.as_view('envs'), methods=['GET'])
 api_v1.add_url_rule('/options', view_func=PlayBookOptionsAPI.as_view('options'), methods=['GET', 'POST'])
 api_v1.add_url_rule('/options/<int:option_id>', view_func=PlayBookOptionAPI.as_view('option'),

@@ -113,7 +113,7 @@ def userinfo():
 
 @api_v1.route('/user/check_user', methods=['POST'])
 def check_user_exist():
-    """检测用户是否已注册接口"""
+    """检测用户是否已注册接口 1为已注册, 0为未注册"""
     ret = {"status": 0}
     username = request.json.get("username")
     if not username:

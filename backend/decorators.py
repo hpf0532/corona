@@ -24,11 +24,11 @@ def zexist(name, value):
 
 
 def auth_required(view):
+    """登录保护装饰器"""
     wraps(view)
 
     def wrapper(*args, **kwargs):
         token = request.headers.get('X-Token')
-        print(token)
 
         # 没有token
         if not token:

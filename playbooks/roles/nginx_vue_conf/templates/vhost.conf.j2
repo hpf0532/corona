@@ -1,0 +1,28 @@
+server
+    {
+        listen {{ port }};
+        server_name {{ domain_name }};
+        index index.html default.html default.htm default.php;
+        root  /mnt/wwwroot/{{ project }}/dist;
+
+
+        location ~ .*\.(gif|jpg|jpeg|png|bmp|swf)$
+        {
+            expires      30d;
+        }
+
+        location ~ .*\.(js|css)?$
+        {
+            expires      12h;
+        }
+	location / {
+	 	 try_files $uri $uri/ /index.html;
+	}
+
+        location ~ /\.
+        {
+            deny all;
+        }
+
+        access_log  off;
+    }

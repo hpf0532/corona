@@ -39,6 +39,9 @@ class Host(db.Model):
     # 关系标量
     group = db.relationship('HostGroup', back_populates='hosts')
 
+    def __repr__(self):
+        return '<Host %r>' % self.hostname
+
 
 # 主机组表
 class HostGroup(db.Model):
@@ -48,6 +51,9 @@ class HostGroup(db.Model):
     description = db.Column(db.String(128))
     # 关系定义,不会在数据库中生成字段
     hosts = db.relationship('Host', back_populates='group')
+
+    def __repr__(self):
+        return '<HostGroup %r>' % self.name
 
 
 class PlayBook(db.Model):
@@ -71,8 +77,12 @@ class PlayBookDetail(db.Model):
     content = db.Column(db.Text)
     playbook = db.relationship('PlayBook', back_populates='detail')
 
+    def __repr__(self):
+        return '<PlayBookDetail %r>' % self.id
+
 
 class Environment(db.Model):
+    """环境信息"""
     __tablename__ = 'environment'
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     name = db.Column(db.String(20), nullable=False)
@@ -82,6 +92,7 @@ class Environment(db.Model):
 
 
 class Options(db.Model):
+    """playbook选项参数"""
     __tablename__ = 'options'
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     name = db.Column(db.String(48), nullable=False)

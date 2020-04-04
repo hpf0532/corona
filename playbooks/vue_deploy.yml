@@ -4,9 +4,9 @@
   remote_user: root
   environment:
     PATH: "{{ ansible_env.PATH }}:/usr/local/node/bin"
-  vars:
+#  vars:
     #    - remote_port: 22
-    - remote_host: root@api
+  #    - remote_host: root@api
   #    - project: FWL-lawyer
   tasks:
     #    - name: ping
@@ -15,10 +15,11 @@
       git:
         #        repo: git@github.com:hpf0532/corona.git
         repo: "{{ git_repo }}"
-        dest: /home/hpf/corona
-        version: master
+        dest: '{{ workdir }}/{{ project }}'
+        version: '{{ branch }}'
         accept_hostkey: yes
-        key_file: "/home/hpf/.ssh/id_rsa"
+        force: yes
+    #        key_file: "/home/hp  f/.ssh/id_rsa"
     #        update: yes
     #      ignore_errors: yes
     - name: source profile
@@ -26,17 +27,20 @@
       args:
         executable: /bin/bash
     - name: npm install
-      npm:
-        name: npm-script
-        path: /home/hpf/FWL-lawyer
-    - name: npm run build
       shell: "{{ npm_cmd }}"
       args:
-        chdir: /home/hpf/FWL-lawyer
+        chdir: '{{ workdir }}/{{ project }}'
+    #      npm:
+    #        name: npm-script
+    #        path: '{{ workdir }}/{{ project }}'
+    - name: npm run build
+      shell: "{{ build_cmd }}"
+      args:
+        chdir: '{{ workdir }}/{{ project }}'
     - name: tar package
       shell: tar -zcf "{{ project }}".tar.gz ./dist/
       args:
-        chdir: /home/hpf/FWL-lawyer
+        chdir: '{{ workdir }}/{{ project }}'
     #    - name: npm install
     #      shell: "cd /home/hpf/FWL-lawyer; npm install "
     #      args:
@@ -49,7 +53,7 @@
     - name: scp dist package
       shell: 'scp -P "{{ remote_port }}" -r "{{ project }}".tar.gz "{{ remote_host }}":/mnt/wwwroot/"{{ project }}"'
       args:
-        chdir: /home/hpf/{{ project }}
+        chdir: '{{ workdir }}/{{ project }}'
         executable: /bin/bash
     - name: rename origin dir
       shell:  'ssh -p "{{ remote_port }}" "{{ remote_host }}" "mv /mnt/wwwroot/"{{ project }}"/dist /mnt/wwwroot/"{{ project }}"/dist_$(date +"%Y%m%d%H%M")"'
