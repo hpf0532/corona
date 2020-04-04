@@ -43,7 +43,6 @@ class PlayBookOptionAPI(MethodView):
     def put(self, args, option_id):
         """编辑playbook参数接口"""
         option = Options.query.get_or_404(option_id)
-        print(option)
         option.name = args['name']
         option.content = json.dumps(args['content'])
         option.playbook_id = args['playbook_id']
@@ -93,7 +92,6 @@ class PlayBookOptionsAPI(MethodView):
         if pagination.has_next:
             next = url_for('.options', page=page + 1, _external=True)
 
-        print(items)
         return jsonify(options_schema(items, current, prev, next, pagination))
 
     @use_args(options_args, location='json')
@@ -196,7 +194,6 @@ class FlushTaskAPI(MethodView):
     def get(self, task_id):
         """轮询task结果接口"""
         task = AnsibleTasks.query.get_or_404(task_id)
-        print(task)
         return jsonify(flush_task_schema(task))
 
 

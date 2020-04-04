@@ -12,7 +12,7 @@ from celery import Celery
 from celery.schedules import crontab
 from logging.handlers import TimedRotatingFileHandler
 from backend.settings import config
-from backend.extensions import db, migrate
+from backend.extensions import db, migrate, avatars
 from backend.settings import basedir
 
 
@@ -59,6 +59,7 @@ def create_app(config_name=None):
 def register_extensions(app):
     db.init_app(app)
     migrate.init_app(app, db)
+    avatars.init_app(app)
 
 
 def register_blueprints(app):

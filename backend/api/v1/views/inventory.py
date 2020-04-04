@@ -115,7 +115,6 @@ class HostsAPI(MethodView):
     @use_args(hosts_args, location='json')
     def post(self, args):
         """新建主机接口"""
-        print(args)
         host = Host(hostname=args["hostname"], ip=args['ip'], port=args['port'], group_id=args['group_id'])
         try:
             db.session.add(host)
@@ -161,7 +160,7 @@ class GroupAPI(MethodView):
 
 
 class GroupsAPI(MethodView):
-    decorators = [auth_required]
+    # decorators = [auth_required]
 
     def get(self):
         """获取所有主机组接口"""
@@ -216,7 +215,6 @@ class PlaybookAPI(MethodView):
             db.session.commit()
         except Exception as e:
             current_app.logger.error(e)
-            print(e)
             db.session.rollback()
             return api_abort(400, "数据保存失败")
         return jsonify(playbook_schema(playbook))
@@ -252,12 +250,10 @@ class PlaybooksAPI(MethodView):
         except Exception as e:
             db.session.rollback()
             current_app.logger.error(e)
-            print(e)
             return api_abort(400, "数据保存失败")
         play_content = PlayBookDetail()
         # commit提交后才能获取playbook的id
         play_content.playbook_id = playbook.id
-        print(playbook.id)
         play_content.content = yml
         try:
             db.session.add(play_content)

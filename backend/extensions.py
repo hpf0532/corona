@@ -6,6 +6,8 @@
 
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
+from flask_avatars import Avatars
 
 db = SQLAlchemy()
 migrate = Migrate()
+avatars = Avatars()

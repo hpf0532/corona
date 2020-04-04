@@ -5,13 +5,14 @@
 # IDE: PyCharm
 import redis
 import jwt, datetime, bcrypt
-from flask import jsonify, request, current_app, g
+from flask import jsonify, request, current_app, g, send_from_directory, url_for
 from sqlalchemy import or_
+from backend.decorators import auth_required
 from backend.utils import api_abort
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.decorators import auth_required
-from backend.extensions import db
+from backend.extensions import db, avatars
 from backend.settings import POOL
 
 
@@ -43,9 +44,7 @@ def register():
             return api_abort(400, "用户已注册")
 
         password = payload['password']
-        user = User()
-        user.username = username
-        user.email = email
+        user = User(username=username, email=email)
         user.password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
         db.session.add(user)
         try:
@@ -107,8 +106,12 @@ def logout():
 
 
 @api_v1.route('/user/info', methods=['GET'])
+@auth_required
 def userinfo():
-    return jsonify({"data": 200})
+    return jsonify({
+        "name": g.user.username,
+        "avatar": url_for("api_v1.get_avatar", filename="dsb_s.png", _external=True)
+    })
 
 
 @api_v1.route('/user/check_user', methods=['POST'])
@@ -145,6 +148,12 @@ def test():
     from sqlalchemy import func
     # print("=====" + repr(g.user))
     # query = User.query.filter(User.id == 1).one()
-    query = User.query.with_entities(func.count(User.id)).scalar()
-    print(query)
-    return jsonify({"status": 200})
+    # query = User.query.with_entities(func.count(User.id)).scalar()
+    avatar = avatars.default()
+    # print(query)
+    return jsonify({"avatar": avatar})
+
+
+@api_v1.route('/avatars/<path:filename>', methods=['GET'])
+def get_avatar(filename):
+    return send_from_directory(current_app.config['AVATARS_SAVE_PATH'], filename)

@@ -39,6 +39,7 @@ class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     BACK_LOCALES = ['en_US', 'zh_Hans_CN']
     BACK_ITEM_PER_PAGE = 2
+    UPLOAD_PATH = os.path.join(basedir, 'uploads')
     secret = secrets.token_urlsafe(nbytes=15)
     '''
     # 旧版本
@@ -54,6 +55,9 @@ class BaseConfig:
 
     CELERY_BROKER_URL = BROKER
     CELERY_RESULT_BACKEND = BACKEND
+
+    AVATARS_SAVE_PATH = os.path.join(UPLOAD_PATH, 'avatars')
+    AVATARS_SIZE_TUPLE = (30, 100, 200)
 
 
 class MySQLConfig:

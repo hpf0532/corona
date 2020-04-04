@@ -12,7 +12,7 @@ from ansible_index import AnsibleOpt
 
 @api_v1.route("/test", methods=["GET"])
 def hello():
-    print(type(AnsibleTasks.query))
+    # print(type(AnsibleTasks.query))
     # print(result.ansible_id)
     # print(r)
     playbook_tid = "AnsibleApi-%s" % (datetime.datetime.now().strftime("%Y%m%d-%H%M%S"))

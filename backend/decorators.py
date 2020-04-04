@@ -17,7 +17,7 @@ conn = redis.Redis(connection_pool=POOL)
 # 判断元素是否在有序集合中
 def zexist(name, value):
     index = conn.zrank(name, value)
-    print(index)
+    # print(index)
     if index == 0 or index:
         return True
     return False
@@ -25,8 +25,8 @@ def zexist(name, value):
 
 def auth_required(view):
     """登录保护装饰器"""
-    wraps(view)
 
+    @wraps(view)
     def wrapper(*args, **kwargs):
         token = request.headers.get('X-Token')
 

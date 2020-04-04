@@ -5,6 +5,7 @@ import datetime
 # from sqlalchemy.ext.declarative import declarative_base
 # from sqlalchemy.orm import sessionmaker
 from backend.extensions import db
+from flask_avatars import Identicon
 
 # connstr = "{}://{}:{}@{}:{}/{}".format(
 #     "mysql+pymysql", "ansible", "qingdao@123QWE",
@@ -23,6 +24,21 @@ class User(db.Model):
     username = db.Column(db.String(48), unique=True, nullable=False)
     email = db.Column(db.String(64), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
+    avatar_s = db.Column(db.String(64))
+    avatar_m = db.Column(db.String(64))
+    avatar_l = db.Column(db.String(64))
+
+    def __init__(self, **kwargs):
+        super(User, self).__init__(**kwargs)
+        self.generate_avatar()
+
+    def generate_avatar(self):
+        avatar = Identicon()
+        filenames = avatar.generate(text=self.username)
+        self.avatar_s = filenames[0]
+        self.avatar_m = filenames[1]
+        self.avatar_l = filenames[2]
+        db.session.commit()
 
     def __repr__(self):
         return '<User %r>' % self.username

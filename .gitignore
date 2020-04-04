@@ -127,3 +127,9 @@ yarn-error.log*
 *.sln
 *.retry
 *.gz
+
+uploads/*
+!uploads/.gitkeep
+!uploads/avatars
+uploads/avatars/*
+!uploads/avatars/.gitkeep
