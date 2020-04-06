@@ -35,10 +35,19 @@ BACKEND = "redis://:%s@%s:%s/%s" % (REDIS_PD, REDIS_ADDR, REDIS_PORT, result_db)
 POOL = redis.ConnectionPool(host=REDIS_ADDR, port=REDIS_PORT, password=REDIS_PD, db=ansible_result_redis_db)
 
 
+# token操作类型
+class Operations:
+    LOGIN = 'login'
+    CONFIRM = 'confirm'
+    RESET_PASSWORD = 'reset-password'
+    CHANGE_EMAIL = 'change-email'
+
+
 class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     BACK_LOCALES = ['en_US', 'zh_Hans_CN']
     BACK_ITEM_PER_PAGE = 2
+    MAIL_SUBJECT_PREFIX = '[Corona]'
     UPLOAD_PATH = os.path.join(basedir, 'uploads')
     secret = secrets.token_urlsafe(nbytes=15)
     '''
@@ -58,6 +67,13 @@ class BaseConfig:
 
     AVATARS_SAVE_PATH = os.path.join(UPLOAD_PATH, 'avatars')
     AVATARS_SIZE_TUPLE = (30, 100, 200)
+
+    MAIL_SERVER = os.getenv('MAIL_SERVER')
+    MAIL_PORT = 25
+    MAIL_USE_SSL = False
+    MAIL_USERNAME = os.getenv('MAIL_USERNAME')
+    MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
+    MAIL_DEFAULT_SENDER = ('Corona', MAIL_USERNAME)
 
 
 class MySQLConfig:

@@ -4,16 +4,38 @@
 # File: utils.py
 # IDE: PyCharm
 
-import ipaddress, glob, json, os
+import datetime
+import ipaddress, glob, json, os, jwt
 from flask import jsonify, current_app
 from werkzeug.http import HTTP_STATUS_CODES
 from webargs import ValidationError
 from backend.models import HostGroup, PlayBook, Environment
 from backend.settings import playbook_dir
-from backend.extensions import db
+
+
+def gen_token(user, operation, expire_in=None, **kwargs):
+    """
+    生成token函数
+    :param operation: 操作类型
+    :param expire_in: 超时时间
+    :param user_id:
+    :return:
+    """
+    if not expire_in:
+        expire_in = current_app.config.get('AUTH_EXPIRE')
+    data = {
+        "user_id": user.id,
+        "operation": operation,
+        "exp": int(datetime.datetime.now().timestamp()) + expire_in  # 超时时间
+    }
+    data.update(**kwargs)
+    token = jwt.encode(data, current_app.config.get("SECRET_KEY"), 'HS256').decode()
+
+    return token
 
 
 def validate_ip(val):
+    """校验ip类型"""
     try:
         ip = ipaddress.ip_address(val)
         if ip.is_loopback or ip.is_multicast or ip.is_reserved:
@@ -23,6 +45,7 @@ def validate_ip(val):
 
 
 def validate_json(val):
+    """校验json格式"""
     try:
         print(val)
         json.loads(val)

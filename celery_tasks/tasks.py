@@ -11,11 +11,14 @@ else:
     sys.exit()
 import redis
 import json
-from flask import current_app
+from flask import current_app, render_template
+from flask_mail import Message
 from backend.settings import REDIS_ADDR, REDIS_PD, REDIS_PORT, ansible_result_redis_db, result_db, inventory
+from backend.extensions import mail
 from celery.utils.log import get_task_logger
 from celery.result import AsyncResult
 from sqlalchemy.orm.exc import NoResultFound
+
 celery_logger = get_task_logger(__name__)
 # 导入 ansible api
 from ansible_api import ansible_playbook_api, ansible_exec_api
@@ -103,6 +106,16 @@ def flush_token(self):
     conn = redis.Redis(connection_pool=POOL)
     conn.zremrangebyscore("token_blacklist", 0, now - expire)
     return 'success'
+
+
+# 发送邮件
+@celery.task(bind=True, base=MyTask)
+def send_mail(self, to, subject, template, **kwargs):
+    message = Message(current_app.config['MAIL_SUBJECT_PREFIX'] + subject, recipients=[to])
+    message.body = render_template(template + '.txt', **kwargs)
+    message.html = render_template(template + '.html', **kwargs)
+    mail.send(message)
+    return "success"
 
 
 # 测试任务

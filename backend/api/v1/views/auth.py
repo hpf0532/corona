@@ -4,30 +4,16 @@
 # File: auth.py
 # IDE: PyCharm
 import redis
-import jwt, datetime, bcrypt
-from flask import jsonify, request, current_app, g, send_from_directory, url_for
+import datetime, bcrypt
+from flask import jsonify, request, current_app, g
 from sqlalchemy import or_
-from backend.decorators import auth_required
-from backend.utils import api_abort
+from backend.utils import api_abort, gen_token
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.decorators import auth_required
 from backend.extensions import db, avatars
-from backend.settings import POOL
-
-
-def gen_token(user_id):
-    """
-    生成token函数
-    :param user_id:
-    :return:
-    """
-    token = jwt.encode({
-        "user_id": user_id,
-        "exp": int(datetime.datetime.now().timestamp()) + current_app.config.get('AUTH_EXPIRE')   # 超时时间
-    }, current_app.config.get("SECRET_KEY"), 'HS256').decode()
-
-    return token
+from backend.email import send_confirm_email
+from backend.settings import POOL, Operations
 
 
 # 注册视图
@@ -76,7 +62,7 @@ def login():
             return api_abort(401, "用户名或密码错误")
 
         # 验证通过，生成token
-        token = gen_token(user.id)
+        token = gen_token(user, Operations.LOGIN)
         response = {
             'code': 20000,
             'user': {
@@ -103,15 +89,6 @@ def logout():
     # 用户注销，将token加入到黑名单中
     r.zadd("token_blacklist", {g.token: int(datetime.datetime.now().timestamp())})
     return '', 204
-
-
-@api_v1.route('/user/info', methods=['GET'])
-@auth_required
-def userinfo():
-    return jsonify({
-        "name": g.user.username,
-        "avatar": url_for("api_v1.get_avatar", filename="dsb_s.png", _external=True)
-    })
 
 
 @api_v1.route('/user/check_user', methods=['POST'])
@@ -149,11 +126,10 @@ def test():
     # print("=====" + repr(g.user))
     # query = User.query.filter(User.id == 1).one()
     # query = User.query.with_entities(func.count(User.id)).scalar()
-    avatar = avatars.default()
+    # avatar = avatars.default()
+    user = User.query.filter(User.id == 2).one()
+    token = gen_token(user, Operations.CONFIRM)
+    send_confirm_email(user, token)
+
     # print(query)
-    return jsonify({"avatar": avatar})
-
-
-@api_v1.route('/avatars/<path:filename>', methods=['GET'])
-def get_avatar(filename):
-    return send_from_directory(current_app.config['AVATARS_SAVE_PATH'], filename)
+    return jsonify({"avatar": 1})

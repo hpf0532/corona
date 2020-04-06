@@ -10,7 +10,7 @@ from jwt import ExpiredSignatureError
 from functools import wraps
 from backend.utils import api_abort
 from backend.models import User
-from backend.settings import POOL
+from backend.settings import POOL, Operations
 
 conn = redis.Redis(connection_pool=POOL)
 
@@ -46,6 +46,10 @@ def auth_required(view):
             return api_abort(401, "token超时")
         except Exception as e:
             current_app.logger.error("token非法: {}".format(e))
+            return api_abort(401, "token非法")
+
+        # 验证token类型为LOGIN
+        if data.get('operation') != Operations.LOGIN:
             return api_abort(401, "token非法")
 
         # token验证通过，将当前用户挂载到g变量中
