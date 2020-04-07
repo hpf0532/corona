@@ -68,6 +68,18 @@ def auth_required(view):
     return wrapper
 
 
+def confirm_required(view):
+    """邮箱确认装饰器"""
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        if not g.user.confirmed:
+            return api_abort(403, "您的邮箱未认证")
+        return view(*args, **kwargs)
+
+    return wrapper
+
+
 if __name__ == '__main__':
     a = zexist('token_blacklist',
                ".eyJ1c2VyX2lkIjoyLCJleHAiOjE1ODQwNDczOTB9.DtOY3brHem0hijulzl5sGc651gl29gBU6xRQOOh0KDs")

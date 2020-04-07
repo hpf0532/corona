@@ -6,11 +6,13 @@
 
 import datetime
 import ipaddress, glob, json, os, jwt
+from jwt import ExpiredSignatureError, InvalidTokenError
 from flask import jsonify, current_app
 from werkzeug.http import HTTP_STATUS_CODES
 from webargs import ValidationError
 from backend.models import HostGroup, PlayBook, Environment
-from backend.settings import playbook_dir
+from backend.settings import playbook_dir, Operations
+from backend.extensions import db
 
 
 def gen_token(user, operation, expire_in=None, **kwargs):
@@ -32,6 +34,25 @@ def gen_token(user, operation, expire_in=None, **kwargs):
     token = jwt.encode(data, current_app.config.get("SECRET_KEY"), 'HS256').decode()
 
     return token
+
+
+def validate_token(user, token, operation):
+    """验证token"""
+    try:
+        data = jwt.decode(token, current_app.config.get("SECRET_KEY"), algorithms=['HS256'])
+    except (ExpiredSignatureError, InvalidTokenError):
+        return False
+
+    if operation != data.get('operation') or user.id != data.get('user_id'):
+        return False
+
+    if operation == Operations.CONFIRM:
+        user.confirmed = True
+    else:
+        return False
+
+    db.session.commit()
+    return True
 
 
 def validate_ip(val):

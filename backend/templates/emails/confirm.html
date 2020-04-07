@@ -1,5 +1,7 @@
 <p>Hello {{ user }},</p>
-<p>Welcome to <b>Albumy</b>!</p>
+<p>Welcome to <b>Corona</b>!</p>
 <p>Please visit the link below to verify your email address:<br>
+    <a href="{{ domain + '/#/auth/confirm' + '?' + 'token=' + token }}">{{ domain + '/#/auth/confirm' + '?' + 'token=' +
+        token }}</a>
 </p>
 <small>(Please do not reply to this notification, this inbox is not monitored.)</small>

@@ -7,9 +7,9 @@
 from celery_tasks.tasks import send_mail
 
 
-def send_confirm_email(user, token, to=None):
+def send_confirm_email(user, token, domain, to=None):
     send_mail.delay(subject='Email Confirm', to=to or user.email, template='emails/confirm', user=user.username,
-                    token=token)
+                    token=token, domain=domain)
 
 
 def send_reset_password_email(user, token):

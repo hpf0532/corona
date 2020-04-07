@@ -7,7 +7,7 @@ import redis
 import datetime, bcrypt
 from flask import jsonify, request, current_app, g
 from sqlalchemy import or_
-from backend.utils import api_abort, gen_token
+from backend.utils import api_abort, gen_token, validate_token
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.decorators import auth_required
@@ -20,6 +20,10 @@ from backend.settings import POOL, Operations
 @api_v1.route("/user/reg", methods=["POST"])
 def register():
     payload = request.json
+
+    domain = request.headers.get('Origin')
+    if not domain:
+        return api_abort(403, "请使用浏览器登录")
 
     try:  # 有任何异常，都返回400，如果保存数据出错，则向外抛出异常
         email = payload['email']
@@ -35,12 +39,15 @@ def register():
         db.session.add(user)
         try:
             db.session.commit()
+            token = gen_token(user=user, operation=Operations.CONFIRM)
+            send_confirm_email(user=user, token=token, domain=domain)
             current_app.logger.info("用户{}注册成功".format(username))
             return jsonify({"user_id": user.id})
         except Exception as e:
             current_app.logger.error("%s" % e)
             db.session.rollback()
             raise
+
 
     except Exception as e:
         current_app.logger.error("%s" % e)
@@ -119,6 +126,22 @@ def check_email_exist():
     return jsonify(ret)
 
 
+@api_v1.route('/confirm/<token>', methods=['GET'])
+@auth_required
+def confirm(token):
+    """邮箱验证"""
+    domain = request.headers.get("Origin")
+    print(domain)
+    if not domain:
+        return api_abort(401, "请使用浏览器登录, 邮箱认证失败")
+    if g.user.confirmed:
+        return jsonify({"code": 20001, "message": "邮箱已认证"})
+    if validate_token(user=g.user, token=token, operation=Operations.CONFIRM):
+        return jsonify({"code": 20002, "message": "邮箱认证成功"})
+    else:
+        return jsonify({"code": 50001, "message": "邮箱认证失败"})
+
+
 @api_v1.route('/test', methods=['GET'])
 # @auth_required
 def test():
@@ -127,9 +150,11 @@ def test():
     # query = User.query.filter(User.id == 1).one()
     # query = User.query.with_entities(func.count(User.id)).scalar()
     # avatar = avatars.default()
+    domain = request.headers.get('Origin')
     user = User.query.filter(User.id == 2).one()
     token = gen_token(user, Operations.CONFIRM)
-    send_confirm_email(user, token)
+    send_confirm_email(user, token, domain)
+    # print(request.headers.get('Origin'))
 
     # print(query)
     return jsonify({"avatar": 1})
