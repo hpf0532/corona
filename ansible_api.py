@@ -14,7 +14,9 @@ import redis
 import datetime
 import logging, logging.handlers
 from callback_plugins.redis2 import CallbackModule
-from tools.config import REDIS_ADDR, REDIS_PORT, REDIS_PD, ansible_result_redis_db
+# from tools.config import REDIS_ADDR, REDIS_PORT, REDIS_PD, ansible_result_redis_db
+from backend.settings import REDIS_ADDR, REDIS_PORT, REDIS_PD, ansible_result_redis_db
+
 ansible_remote_user = 'root'
 
 
@@ -23,7 +25,7 @@ class ResultCallback(CallbackBase):
     CALLBACK_VERSION = 2.0
     CALLBACK_TYPE = 'stdout'
 
-    def __init__(self, id):     # 初始化时要求传入任务 id
+    def __init__(self, id):  # 初始化时要求传入任务 id
         super(ResultCallback, self).__init__()
         self.id = id
         self.r = redis.Redis(host=REDIS_ADDR, port=REDIS_PORT, password=REDIS_PD, db=ansible_result_redis_db)

@@ -16,6 +16,8 @@ Date: 2020-04-08 15:13:43
 SET FOREIGN_KEY_CHECKS=0;
 
 CREATE DATABASE IF NOT EXISTS `ansible` default charset utf8mb4;
+
+use `ansible`
 -- ----------------------------
 -- Table structure for alembic_version
 -- ----------------------------

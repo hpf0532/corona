@@ -20,7 +20,7 @@ REDIS_PORT = 6379
 REDIS_PD = ''
 ansible_result_redis_db = 10
 # 连接远程服务器使用的用户名
-# ansible_remote_user = 'shiyanlou'
+# ansible_remote_user = 'test'
 broker_db = 3
 result_db = 4
 

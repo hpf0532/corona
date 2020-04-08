@@ -14,7 +14,7 @@ from backend.decorators import auth_required
 def userinfo():
     return jsonify({
         "name": g.user.username,
-        "avatar": url_for("api_v1.get_avatar", filename="dsb_s.png", _external=True)
+        "avatar": url_for("api_v1.get_avatar", filename=g.user.avatar_s, _external=True)
     })
 
 
