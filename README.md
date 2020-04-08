@@ -23,7 +23,7 @@ pip3 install git+https://github.com/Supervisor/supervisor#egg=supervisor
 
 3. 下载源码
 ```bash
-$ git clone git@github.com:hpf0532/corona.git
+$ git clone https://github.com/hpf0532/corona.git
 ```
 
 4. 安装依赖
