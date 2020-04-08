@@ -6,14 +6,22 @@
 import redis
 import datetime, bcrypt
 from flask import jsonify, request, current_app, g
+from webargs import fields, validate
 from sqlalchemy import or_
+from webargs.flaskparser import use_args
+
 from backend.utils import api_abort, gen_token, validate_token
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.decorators import auth_required
-from backend.extensions import db, avatars
-from backend.email import send_confirm_email
+from backend.extensions import db, avatars, limiter
+from backend.email import send_confirm_email, send_reset_password_email
 from backend.settings import POOL, Operations
+
+reset_password_args = {
+    "email": fields.Email(required=True),
+    "new_password": fields.Str(required=True, validate=validate.Length(min=6))
+}
 
 
 # 注册视图
@@ -142,18 +150,51 @@ def confirm(token):
         return jsonify({"code": 50001, "message": "邮箱认证失败"})
 
 
+@api_v1.route('/forget-password', methods=['POST'])
+@limiter.limit("1/minute", error_message="验证邮件60秒只能发送一次")
+def forget_password():
+    """忘记密码接口"""
+    try:
+        domain = request.headers.get("Origin")
+        if not domain:
+            return api_abort(401, "请使用浏览器访问")
+        email = request.json["email"]
+        user = User.query.filter_by(email=email).first()
+        if not user:
+            return api_abort(400, "邮箱错误")
+        token = gen_token(user=user, operation=Operations.RESET_PASSWORD, expire_in=3600)
+        send_reset_password_email(user=user, token=token, domain=domain)
+        return jsonify({"code": 20003, "message": "重置密码邮件已发送"})
+    except Exception as e:
+        return api_abort(401, "数据有误")
+
+
+@api_v1.route('/reset-password/<token>', methods=['POST'])
+@use_args(reset_password_args, location="json")
+def reset_password(args, token):
+    """重置密码接口"""
+    user = User.query.filter_by(email=args['email']).first()
+    if not user:
+        return api_abort(400, "邮箱错误")
+    if validate_token(user=user, token=token, operation=Operations.RESET_PASSWORD, new_password=args['new_password']):
+        return jsonify({"code": 20004, "message": "密码已更新, 请登录"})
+    else:
+        return jsonify({"code": 50002, "message": "token认证失败"})
+
+
 @api_v1.route('/test', methods=['GET'])
 # @auth_required
+@limiter.limit("1/minute", error_message="验证邮件60秒只能发送一次")
 def test():
     from sqlalchemy import func
     # print("=====" + repr(g.user))
     # query = User.query.filter(User.id == 1).one()
     # query = User.query.with_entities(func.count(User.id)).scalar()
     # avatar = avatars.default()
-    domain = request.headers.get('Origin')
-    user = User.query.filter(User.id == 2).one()
-    token = gen_token(user, Operations.CONFIRM)
-    send_confirm_email(user, token, domain)
+    # domain = request.headers.get('Origin')
+    # user = User.query.filter(User.id == 2).one()
+    # token = gen_token(user, Operations.CONFIRM)
+    # send_confirm_email(user, token, domain)
     # print(request.headers.get('Origin'))
 
     # print(query)

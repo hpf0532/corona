@@ -12,8 +12,10 @@ def send_confirm_email(user, token, domain, to=None):
                     token=token, domain=domain)
 
 
-def send_reset_password_email(user, token):
-    send_mail(subject='Password Reset', to=user.email, template='emails/reset_password', user=user, token=token)
+def send_reset_password_email(user, token, domain):
+    send_mail.delay(subject='Password Reset', to=user.email, template='emails/reset_password', user=user.username,
+                    token=token,
+                    domain=domain)
 
 
 def send_change_email_email(user, token, to=None):

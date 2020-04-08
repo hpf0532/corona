@@ -6,6 +6,8 @@
 
 import datetime
 import ipaddress, glob, json, os, jwt
+
+import bcrypt
 from jwt import ExpiredSignatureError, InvalidTokenError
 from flask import jsonify, current_app
 from werkzeug.http import HTTP_STATUS_CODES
@@ -36,7 +38,7 @@ def gen_token(user, operation, expire_in=None, **kwargs):
     return token
 
 
-def validate_token(user, token, operation):
+def validate_token(user, token, operation, new_password=None):
     """验证token"""
     try:
         data = jwt.decode(token, current_app.config.get("SECRET_KEY"), algorithms=['HS256'])
@@ -48,6 +50,8 @@ def validate_token(user, token, operation):
 
     if operation == Operations.CONFIRM:
         user.confirmed = True
+    elif operation == Operations.RESET_PASSWORD:
+        user.password = bcrypt.hashpw(new_password.encode(), bcrypt.gensalt())
     else:
         return False
 

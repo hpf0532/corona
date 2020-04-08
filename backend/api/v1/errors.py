@@ -19,7 +19,10 @@ def handle_error(err):
         return jsonify({"errors": messages}), err.code
 
 
+@api_v1.errorhandler(429)
+def ratelimit_handler(e):
+    return jsonify({"error": e.description}), 429
+
+
 class SqlOperationError(ValueError):
     pass
-
-

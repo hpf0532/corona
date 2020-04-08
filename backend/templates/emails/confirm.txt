@@ -1,8 +1,8 @@
 Hello {{ user }},
 
-Welcome to Albumy!
+Welcome to Corona!
 
 Please visit the link below to verify your email address:
-
+{{ domain + '/#/auth/confirm' + '?' + 'token=' + token }}
 
 (Please do not reply to this notification, this inbox is not monitored.)
