@@ -39,7 +39,6 @@ PyYAML==5.3
 redis==3.4.1
 six==1.14.0
 SQLAlchemy==1.3.13
-supervisor==4.1.1.dev0
 vine==1.3.0
 webargs==6.0.0
 Werkzeug==1.0.0
