@@ -1,0 +1,4 @@
+- name: check nginx_conf
+  shell: '"{{ basedir }}"/sbin/nginx -t'
+- name: restart nginx
+  shell: '"{{ basedir }}"/sbin/nginx -s reload'

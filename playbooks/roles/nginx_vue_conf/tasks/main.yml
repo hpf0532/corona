@@ -1,0 +1,11 @@
+---
+- name: add new vue nginx_vhost config
+  template: src=vhost.conf.j2 dest={{ basedir }}/conf/{{ vhostdir }}/{{ domain_name }}.conf
+- name: add line into nginx.conf
+  lineinfile:
+    dest: '{{ basedir }}/conf/nginx.conf'
+    insertafter: '^include'
+    line: 'include {{ vhostdir }}/{{ domain_name }}.conf;'
+  notify:
+    - check nginx_conf
+    - restart nginx
