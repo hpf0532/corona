@@ -15,9 +15,9 @@ load_dotenv(find_dotenv())
 basedir = os.path.abspath(os.path.dirname(os.path.dirname(__file__)))
 playbook_dir = os.path.join(basedir, 'playbooks')
 
-REDIS_ADDR = '127.0.0.1'
-REDIS_PORT = 6379
-REDIS_PD = ''
+REDIS_ADDR = os.getenv('REDIS_ADDR')
+REDIS_PORT = os.getenv('REDIS_PORT')
+REDIS_PD = os.getenv('REDIS_PD')
 ansible_result_redis_db = 10
 # 连接远程服务器使用的用户名
 # ansible_remote_user = 'test'

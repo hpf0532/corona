@@ -47,7 +47,7 @@ def register():
         db.session.add(user)
         try:
             db.session.commit()
-            token = gen_token(user=user, operation=Operations.CONFIRM)
+            token = gen_token(user=user, operation=Operations.CONFIRM, expire_in=3600)
             send_confirm_email(user=user, token=token, domain=domain)
             current_app.logger.info("用户{}注册成功".format(username))
             return jsonify({"user_id": user.id})
