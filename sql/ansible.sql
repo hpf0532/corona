@@ -38,7 +38,7 @@ CREATE TABLE `ansibletask` (
   `group_name` varchar(80) DEFAULT NULL,
   `playbook` varchar(80) DEFAULT NULL,
   `extra_vars` text,
-  `ansible_result` text,
+  `ansible_result` longtext,
   `celery_result` text,
   `create_time` datetime DEFAULT NULL,
   `state` tinyint(1) NOT NULL,
