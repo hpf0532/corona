@@ -52,6 +52,7 @@ def create_app(config_name=None):
     register_blueprints(app)  # 注册蓝图
     register_errors(app)  # 错误信息注册
     register_commands(app)  # 注册自定义命令
+    register_logging(app)  # 注册日志
 
     return app
 
