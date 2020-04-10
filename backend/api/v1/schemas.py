@@ -126,6 +126,16 @@ def tasks_schema(items, current, prev, next, pagination):
     }
 
 
+def mytask_schema(items):
+    return {
+        'self': url_for('api_v1.timeline', _external=True),
+        'kind': 'MyTaskCollection',
+        'items': [task_schema(item) for item in items],
+        'count': len(items)
+
+    }
+
+
 def flush_task_schema(task):
     return {
         'ansible_result': json.loads(task.ansible_result) if task.ansible_result else None,

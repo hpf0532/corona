@@ -7,6 +7,8 @@
 from flask import g, jsonify, url_for, current_app, send_from_directory
 from backend.api.v1 import api_v1
 from backend.decorators import auth_required
+from backend.api.v1.schemas import mytask_schema
+from backend.models import AnsibleTasks
 
 
 @api_v1.route('/user/info', methods=['GET'])
@@ -29,3 +31,11 @@ def email_state():
     return jsonify({
         'is_active': g.user.confirmed
     })
+
+
+@api_v1.route('/user/timeline', methods=['GET'])
+@auth_required
+def timeline():
+    """用户最近发布的5个任务"""
+    my_tasks = AnsibleTasks.query.filter_by(user=g.user).limit(5).all()
+    return jsonify(mytask_schema(my_tasks))
