@@ -134,12 +134,29 @@ def check_email_exist():
     return jsonify(ret)
 
 
+@api_v1.route('/resend-confirm-email', methods=['GET'])
+@limiter.limit("1/minute", error_message="验证邮件60秒只能发送一次")
+@auth_required
+def resend_confirm_email():
+    """重新发送确认邮箱邮件"""
+    try:
+        domain = request.headers.get("Origin")
+        if not domain:
+            return api_abort(401, "请使用浏览器访问")
+        if g.user.confirmed:
+            return jsonify({"code": 20001, "message": "邮箱已认证"})
+        token = gen_token(user=g.user, operation=Operations.CONFIRM, expire_in=3600)
+        send_confirm_email(user=g.user, token=token, domain=domain)
+        return jsonify({"code": 20005, "message": "验证邮件已发送"})
+    except Exception as e:
+        return api_abort(401, "数据有误")
+
+
 @api_v1.route('/confirm/<token>', methods=['GET'])
 @auth_required
 def confirm(token):
     """邮箱验证"""
     domain = request.headers.get("Origin")
-    print(domain)
     if not domain:
         return api_abort(401, "请使用浏览器登录, 邮箱认证失败")
     if g.user.confirmed:

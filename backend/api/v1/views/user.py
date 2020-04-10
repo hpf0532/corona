@@ -22,3 +22,10 @@ def userinfo():
 def get_avatar(filename):
     """用户头像"""
     return send_from_directory(current_app.config['AVATARS_SAVE_PATH'], filename)
+
+@api_v1.route('/user/state', methods=['GET'])
+@auth_required
+def email_state():
+    return jsonify({
+        'is_active': g.user.confirmed
+    })
