@@ -6,6 +6,8 @@
 
 import datetime
 import ipaddress, glob, json, os, jwt
+import random
+import redis
 
 import bcrypt
 from jwt import ExpiredSignatureError, InvalidTokenError
@@ -13,7 +15,7 @@ from flask import jsonify, current_app
 from werkzeug.http import HTTP_STATUS_CODES
 from webargs import ValidationError
 from backend.models import HostGroup, PlayBook, Environment
-from backend.settings import playbook_dir, Operations
+from backend.settings import playbook_dir, Operations, POOL
 from backend.extensions import db
 
 
@@ -110,6 +112,36 @@ def api_abort(code, message=None, **kwargs):
     response = jsonify(code=code, message=message, **kwargs)
     response.status_code = code
     return response
+
+
+def gen_captcha():
+    """生成验证码函数"""
+    tmp_list = []
+    for i in range(4):
+        u = chr(random.randint(65, 90))  # 大写字母
+        l = chr(random.randint(97, 122))  # 小写字母
+        n = str(random.randint(0, 9))  # 数字
+
+        tmp = random.choice([u, l, n])
+        tmp_list.append(tmp)
+
+    return "".join(tmp_list), tmp_list
+
+
+def get_random_color():
+    """定义随机获取颜色的函数"""
+    return random.randint(0, 255), random.randint(0, 255), random.randint(0, 255)
+
+
+def validate_capcha(cap_id, user_cap):
+    """验证用户输入的验证码"""
+    r = redis.Redis(connection_pool=POOL)
+    capcha = r.get(cap_id)
+    if not capcha: return False
+    if user_cap.lower() == capcha.decode():
+        return True
+    else:
+        return False
 
 
 def model_to_dict(result):

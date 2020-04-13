@@ -3,25 +3,69 @@
 # Date: 2020/3/4 下午8:55
 # File: auth.py
 # IDE: PyCharm
+import os
+import uuid
+
 import redis
+import base64
 import datetime, bcrypt
 from flask import jsonify, request, current_app, g
 from webargs import fields, validate
+from io import BytesIO
+from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy import or_
 from webargs.flaskparser import use_args
 
-from backend.utils import api_abort, gen_token, validate_token
+from backend.utils import api_abort, gen_token, validate_token, get_random_color, gen_captcha, validate_capcha
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.decorators import auth_required
 from backend.extensions import db, avatars, limiter
 from backend.email import send_confirm_email, send_reset_password_email
-from backend.settings import POOL, Operations
+from backend.settings import POOL, Operations, basedir
 
 reset_password_args = {
     "email": fields.Email(required=True),
     "new_password": fields.Str(required=True, validate=validate.Length(min=6))
 }
+
+
+@api_v1.route("/capcha", methods=["GET"])
+@limiter.limit("10/minute", error_message="获取验证码超频")
+def get_capcha():
+    height = 180
+    width = 40
+
+    # 生成image对象
+    img_obj = Image.new(
+        'RGB',
+        (height, width),
+        get_random_color()
+    )
+    # 在生成的图片上写字符
+    # 生成一个图片画笔对象
+    draw_obj = ImageDraw.Draw(img_obj)
+    # 加载字体文件， 得到一个字体对象
+    font_path = os.path.join(basedir, os.getenv("FLASK_APP"), "static/font/kumo.ttf")
+    font_obj = ImageFont.truetype(font_path, 32)
+    # 开始生成随机字符串并且写到图片上
+    capcha, cap_list = gen_captcha()
+    for i, letter in enumerate(cap_list):
+        draw_obj.text((20 + 40 * i, 0), letter, fill=get_random_color(), font=font_obj)
+
+    # 将图片保存至内存中
+    io_obj = BytesIO()
+    img_obj.save(io_obj, 'png')
+    # print(io_obj.getvalue())
+
+    img_base64 = "data:image/png;base64," + base64.b64encode(io_obj.getvalue()).decode()
+    img_id = uuid.uuid4()
+    r = redis.Redis(connection_pool=POOL)
+    r.set(str(img_id), capcha.lower(), ex=60)
+
+    # print(base64.b64decode(io_obj.getvalue()))
+    # return jsonify({"data": data})
+    return jsonify({"img_id": img_id, "img": img_base64})
 
 
 # 注册视图
@@ -32,6 +76,13 @@ def register():
     domain = request.headers.get('Origin')
     if not domain:
         return api_abort(403, "请使用浏览器登录")
+
+    capcha = payload.get('capcha')
+    capcha_id = payload.get('capcha_id')
+    if not capcha or not capcha_id:
+        return api_abort(400, "请输入验证码")
+    if not validate_capcha(capcha_id, capcha):
+        return api_abort(400, "验证码错误")
 
     try:  # 有任何异常，都返回400，如果保存数据出错，则向外抛出异常
         email = payload['email']
@@ -67,6 +118,13 @@ def register():
 @api_v1.route('/user/login', methods=["POST"])
 def login():
     payload = request.json
+
+    capcha = payload.get('capcha')
+    capcha_id = payload.get('capcha_id')
+    if not capcha or not capcha_id:
+        return api_abort(400, "请输入验证码")
+    if not validate_capcha(capcha_id, capcha):
+        return api_abort(400, "验证码错误")
 
     try:
         email = payload["username"]
@@ -175,6 +233,14 @@ def forget_password():
         domain = request.headers.get("Origin")
         if not domain:
             return api_abort(401, "请使用浏览器访问")
+
+        capcha = request.json.get('capcha')
+        capcha_id = request.json.get('capcha_id')
+        if not capcha or not capcha_id:
+            return api_abort(400, "请输入验证码")
+        if not validate_capcha(capcha_id, capcha):
+            return api_abort(400, "验证码错误")
+
         email = request.json["email"]
         user = User.query.filter_by(email=email).first()
         if not user:
