@@ -1,0 +1,48 @@
+---
+- name: check redis is installed
+  stat: path={{ basedir }}
+  register: is_redis_installed
+
+- name: unarchive redis soft
+  unarchive: src=redis-{{ redis_version }}.tar.gz dest={{ tmpdir }}
+  when: is_redis_installed.stat.isdir is undefined and is_redis_installed.stat.exists == false
+
+- name: compile redis soft
+  shell: cd /tmp/redis-{{ redis_version }}/src && make
+
+- name: install redis
+  shell: cd /tmp/redis-{{ redis_version }}/src && make install PREFIX={{ basedir }}
+
+- name: make dir data
+  file: dest={{ basedir }}/data state=directory owner=root group=root mode=0755
+
+- name: make dir etc
+  file: dest={{ basedir }}/etc state=directory owner=root group=root mode=0755
+
+- name: grep ip address
+  shell: ifconfig eth0 | grep -w inet | awk '{print $2}'
+  register: remote_ip
+
+- name: copy config file
+  template: src=redis.conf.j2  dest={{ basedir }}/etc/redis.conf
+
+- name: copy env file
+  copy: src=env.sh dest=/etc/profile.d/redis.sh
+
+- name: source env file
+  shell: source /etc/profile.d/redis.sh
+
+- name: copy start file
+  copy: src=chkconfig.sh dest=/tmp/chkconfig.sh
+
+- name: exec start file
+  shell: sh /tmp/chkconfig.sh
+
+- name: start redis
+  shell: /usr/local/redis/bin/redis-server /usr/local/redis/etc/redis.conf
+
+- name: remove redis soft
+  file: path=/tmp/redis-{{ redis_version }} state=absent
+
+- name: "remove chkconfig.sh"
+  file: path=/tmp/chkconfig.sh state=absent
