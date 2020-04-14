@@ -1,4 +1,4 @@
-redis_version: 4.0.10
-basedir: /usr/local/redis
-tmpdir: /tmp
-daemon: 'yes'
+#redis_version: 4.0.10
+#basedir: /usr/local/redis
+#tmpdir: /tmp
+#daemon: 'yes'

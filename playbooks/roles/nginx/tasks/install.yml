@@ -1,0 +1,31 @@
+---
+- name: install dependent soft
+  yum: name={{ item }} state=present
+  with_items:
+    - zlib
+    - zlib-devel
+    - openssl
+    - openssl-devel
+    - pcre
+    - pcre-devel
+    - gcc
+- name: add www user
+  user: name=www state=present
+- name: create soft dir
+  file: dest=/root/soft mode=755 state=directory
+- name: uncompression nginx soft
+  unarchive: src=nginx-{{ nginx_version }}.tar.gz dest=/root/soft owner=root group=root
+- name: copy script
+  template: src=install_nginx.sh.j2 dest=/root/soft/install_nginx.sh
+- name: execute install script
+  shell: /bin/sh /root/soft/install_nginx.sh
+- name: rm script
+  file: dest=/root/soft/install_nginx.sh state=absent
+- name: copy config file
+  copy: src=nginx.conf dest=/usr/local/nginx/conf
+- name: mkdir vhost
+  file: dest=/usr/local/nginx/conf/vhost mode=755 state=directory
+- name: put env sh
+  copy: src=nginx.sh dest=/etc/profile.d/nginx.sh
+- name: source env
+  shell: source /etc/profile.d/nginx.sh
