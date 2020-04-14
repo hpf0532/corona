@@ -226,7 +226,6 @@ def confirm(token):
 
 
 @api_v1.route('/forget-password', methods=['POST'])
-@limiter.limit("1/minute", error_message="验证邮件60秒只能发送一次")
 def forget_password():
     """忘记密码接口"""
     try:
