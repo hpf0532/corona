@@ -1,0 +1,83 @@
+---
+- name: check mysql is installed
+  stat: path={{ basedir }}
+  register: is_mysql_installed
+
+- name: unarchive mysql soft
+  unarchive: src={{ mysql_version }}.tar.gz dest=/tmp
+  when: is_mysql_installed.stat.isdir is undefined and is_mysql_installed.stat.exists == false
+
+- name: install base pkg
+  yum:
+     name:
+        - perl-Data-Dumper
+        - libaio
+     state: present
+
+- name: add mysql group
+  group: name=mysql state=present
+
+- name: add mysql user
+  user: name=mysql group=mysql shell=/sbin/nologin system=true state=present
+
+- name: install mysql soft
+  shell: cp -r /tmp/{{ mysql_version }} {{ basedir }}
+
+- name: remove data dir
+  file: path={{ basedir }}/data state=absent
+  when: is_mysql_installed.stat.isdir is undefined and is_mysql_installed.stat.exists == false
+
+- name: create log dir
+  file: path={{ basedir }}/logs state=directory mode=0755
+
+# - include_tasks: mkdir.yml
+- include_tasks: linkdir.yml
+
+- name: change owner for mysql
+  file: path={{ basedir }} owner=mysql group=mysql recurse=yes
+
+- name: touch error.log
+  file: path={{ basedir }}/logs/error.log owner=mysql group=mysql state=touch
+
+- name: init mysql56 database
+  shell: '{{ basedir }}/scripts/mysql_install_db --basedir={{ basedir }} --datadir={{ basedir }}/data/ --user=mysql'
+  when: is_mysql_installed.stat.isdir is undefined and is_mysql_installed.stat.exists == false and ver == 5.6
+
+- name: init mysql57 database
+  command: '{{ basedir }}/bin/mysqld --initialize --user=mysql --basedir={{ basedir }} --datadir={{ basedir }}/data'
+  when: is_mysql_installed.stat.isdir is undefined and is_mysql_installed.stat.exists == false and ver == 5.7
+
+- name: init passwd
+  shell: grep 'temporary password' {{ basedir }}/logs/error.log | awk '{print $NF}'
+  register: new_password
+  when: ver == 5.7
+
+- name: config mysql soft
+  template: src=my.cnf.j2 dest=/etc/my.cnf
+
+- name: put env script
+  template: src=env.sh.j2 dest=/etc/profile.d/mysql.sh
+
+- name: source env script
+  shell: source /etc/profile.d/mysql.sh
+
+- name: put service script
+  template: src=service.sh.j2 dest=/tmp/service.sh
+
+- name: exec service script
+  shell: sh /tmp/service.sh
+
+- name: remove tmp dir
+  file: path=/tmp/{{ mysql_version }} state=absent
+
+- name: remove tmp script
+  file: path=/tmp/service.sh state=absent
+
+- name: start mysqld
+  service: name=mysqld state=restarted
+
+
+
+- name: display temporary password
+  debug: 'msg="Password: {{ new_password.stdout }}"'
+  when: ver == 5.7

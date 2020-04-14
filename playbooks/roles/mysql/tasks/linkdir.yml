@@ -1,0 +1,14 @@
+---
+- name: create mysql datadir
+  file: path={{ linkdir }}/mysql_data owner=mysql group=mysql state=directory mode=0755
+
+- name: create mysql binlog dir
+  file: path={{ linkdir }}/mysql_binlog owner=mysql group=mysql state=directory mode=0755
+
+- name: link datadir
+  file: src={{ linkdir }}/mysql_data dest={{ basedir }}/data state=link
+
+- name: link binlog dir
+  file: src={{ linkdir }}/mysql_binlog dest={{ basedir }}/binlog state=link
+
+

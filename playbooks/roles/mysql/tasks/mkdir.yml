@@ -1,0 +1,7 @@
+---
+- name: create data dir
+  file: path={{ basedir }}/data state=directory mode=0755
+
+- name: create binlog dir
+  file: path={{ basedir }}/binlog state=directory mode=0755
+

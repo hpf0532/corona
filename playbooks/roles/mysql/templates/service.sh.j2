@@ -1,0 +1,10 @@
+#!/bin/bash
+cp {{ basedir }}/support-files/mysql.server /etc/init.d/mysqld
+
+sed -i "s#^basedir=#basedir={{ basedir }}#" /etc/init.d/mysqld
+sed -i "s#^datadir=#datadir={{ basedir }}/data#" /etc/init.d/mysqld
+sed -i "s#^mysqld_pid_file_path=#mysqld_pid_file_path={{ basedir }}/data/mysql.pid#" /etc/init.d/mysqld
+
+chkconfig --add mysqld 
+chkconfig mysqld on
+

@@ -1,0 +1,8 @@
+#basedir: "/opt/mysql"
+#mysql_version: "mysql-5.7.29-linux-glibc2.12-x86_64"
+##mysql_version: "mysql-5.6.20-linux-glibc2.5-x86_64"
+#ver: 5.7
+#linkdir: /mnt
+#mysql_port: 3306
+#server_id: 1
+#max_connections: 1500
