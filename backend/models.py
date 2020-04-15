@@ -137,6 +137,7 @@ class AnsibleTasks(db.Model):
     group_name = db.Column(db.String(80), nullable=True)
     playbook = db.Column(db.String(80), unique=False, nullable=True)
     extra_vars = db.Column(db.Text, nullable=True)
+    option_id = db.Column(db.Integer, db.ForeignKey('options.id'), nullable=True)
 
     # True: 任务执行完成 False: 任务执行中
     state = db.Column(db.Boolean, default=False, nullable=False)
@@ -145,7 +146,7 @@ class AnsibleTasks(db.Model):
     create_time = db.Column(db.DateTime, default=datetime.datetime.now)
 
     user = db.relationship('User')
-
+    option = db.relationship('Options')
     # 排序
     __mapper_args__ = {
         "order_by": create_time.desc(),

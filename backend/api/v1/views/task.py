@@ -4,6 +4,7 @@
 # File: task.py
 # IDE: PyCharm
 import json
+from datetime import datetime
 from sqlalchemy import text
 from webargs import fields
 from webargs.flaskparser import use_args
@@ -147,8 +148,17 @@ class TasksAPI(MethodView):
         """分页获取task任务列表"""
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', type=int)
+        start = request.args.get('startTime', type=int)
+        end = request.args.get('endTime', type=int)
+        user = request.args.get('user')
+
         per_page = limit or current_app.config['BACK_ITEM_PER_PAGE']
-        pagination = AnsibleTasks.query.paginate(page, per_page)
+        pagination = AnsibleTasks.query.filter(
+            # 根据时间区间查询相应的任务
+            AnsibleTasks.create_time > datetime.fromtimestamp(start) if start else text(''),
+            AnsibleTasks.create_time < datetime.fromtimestamp(end) if end else text(''),
+            AnsibleTasks.user_id == user if user else text('')
+        ).paginate(page, per_page)
         items = pagination.items
         current = url_for('.tasks', page=page, _external=True)
         prev = None
@@ -170,6 +180,8 @@ class TasksAPI(MethodView):
             host = payload["hosts"]
             playbook = payload["playbook"]
             extra_vars = payload["extra_vars"]
+            option = payload['option']
+            if not option: option = None
             if not host or not playbook:
                 return api_abort(400, "参数有误")
         except Exception as e:
@@ -184,7 +196,7 @@ class TasksAPI(MethodView):
         playbook = PlayBook.query.get_or_404(playbook)
         playbook = playbook.name
 
-        ret = AnsibleOpt.ansible_playbook(exec_hosts, playbook, extra_vars=extra_vars)
+        ret = AnsibleOpt.ansible_playbook(exec_hosts, playbook, option, extra_vars=extra_vars)
 
         return jsonify(ret)
 

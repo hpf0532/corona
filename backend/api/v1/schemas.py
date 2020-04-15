@@ -7,6 +7,22 @@ import json
 from flask import url_for
 
 
+def user_schema(user):
+    return {
+        'id': user.id,
+        'name': user.username
+    }
+
+
+def users_schema(users):
+    return {
+        'self': url_for('api_v1.get_users', _external=True),
+        'kind': 'UserCollection',
+        'items': [user_schema(item) for item in users],
+        'count': len(users)
+    }
+
+
 def host_schema(host):
     return {
         'id': host.id,
@@ -91,6 +107,7 @@ def task_schema(task):
         'ansible_id': task.ansible_id,
         'playbook': task.playbook,
         'user': task.user.username if task.user else None,
+        'option': task.option.name if task.option else None,
         'state': task.state,
         'create_time': int(task.create_time.timestamp())
     }
