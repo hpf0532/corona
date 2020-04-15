@@ -31,11 +31,34 @@ $ git clone https://github.com/hpf0532/corona.git
 pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
 ```
 
-5. 修改配置
+5. 导入sql(mysql)
+```bash
+mysql -uroot -p < sql/ansible.sql
+
+# mysql授权
+> use mysql;
+> grant all on ansible.* to 'ansible'@'%' identified by '123456';
+> flush privileges;
+```
+
+6. 修改配置
 ```
 backend/settings.py  .env  .flaskenv修改相关配置
 ```
-
+.env文件配置样例
+```
+FLASK_APP='backend'
+MYSQL_USER='ansible'
+MYSQL_PASSWORD='123456'
+MYSQL_HOST='127.0.0.1:3306'
+SECRET_KEY="XXXXXXXXXXXXXXXXX"
+MAIL_USERNAME='admin@admin.com'
+MAIL_PASSWORD='123456'
+MAIL_SERVER='smtp.admin.com'
+REDIS_ADDR='127.0.0.1'
+REDIS_PORT=6379
+REDIS_PD='XXXXX'
+```
 
 ## Usage
 
