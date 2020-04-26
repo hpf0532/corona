@@ -75,6 +75,12 @@ class BaseConfig:
     MAIL_PASSWORD = os.getenv('MAIL_PASSWORD')
     MAIL_DEFAULT_SENDER = ('Corona', MAIL_USERNAME)
 
+    ACCESS_KEY_ID = os.getenv('ACCESS_KEY_ID')
+    ACCESS_KEY_SECRET = os.getenv('ACCESS_KEY_SECRET')
+
+    # oss endpoint
+    OSS_ENDPOINT = 'http://oss-cn-beijing.aliyuncs.com'
+
 
 class MySQLConfig:
     MYSQL_USERNAME = os.getenv('MYSQL_USER')

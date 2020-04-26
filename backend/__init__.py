@@ -89,7 +89,7 @@ def register_logging(app):
 
 
 def register_errors(app):
-    from backend.utils import api_abort
+    from backend.utils.utils import api_abort
 
     @app.errorhandler(400)
     def bad_request(e):

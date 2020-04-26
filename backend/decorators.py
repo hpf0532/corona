@@ -8,7 +8,7 @@ import jwt, redis
 from flask import request, current_app, g
 from jwt import ExpiredSignatureError
 from functools import wraps
-from backend.utils import api_abort
+from backend.utils.utils import api_abort
 from backend.models import User
 from backend.settings import POOL, Operations
 

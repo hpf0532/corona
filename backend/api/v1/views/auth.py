@@ -5,7 +5,7 @@
 # IDE: PyCharm
 import os
 import uuid
-
+import time
 import redis
 import base64
 import datetime, bcrypt
@@ -16,7 +16,9 @@ from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy import or_
 from webargs.flaskparser import use_args
 
-from backend.utils import api_abort, gen_token, validate_token, get_random_color, gen_captcha, validate_capcha
+from backend.utils.utils import api_abort, gen_token, validate_token, get_random_color, gen_captcha, validate_capcha, \
+    isAlnum
+from backend.utils.aliyun.oss import create_bucket
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.decorators import auth_required
@@ -87,14 +89,21 @@ def register():
     try:  # 有任何异常，都返回400，如果保存数据出错，则向外抛出异常
         email = payload['email']
         username = payload['username']
+        if not isAlnum(username):
+            return api_abort(400, '用户名只能为字母和数字组合')
 
         user = User.query.filter(or_(User.username == username, User.email == email)).first()
         if user:
             return api_abort(400, "用户已注册")
 
         password = payload['password']
+        bucket = '{}-{}'.format(username, str(int(time.time())))
+        # 创建用户桶
+        create_bucket(bucket)
+
         user = User(username=username, email=email)
         user.password = bcrypt.hashpw(password.encode(), bcrypt.gensalt())
+        user.bucket = bucket
         db.session.add(user)
         try:
             db.session.commit()

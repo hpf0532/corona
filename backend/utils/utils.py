@@ -18,6 +18,16 @@ from backend.models import HostGroup, PlayBook, Environment
 from backend.settings import playbook_dir, Operations, POOL
 from backend.extensions import db
 
+def isAlnum(word):
+    """
+    判断字符串为字母和数字组成，排除中文
+    :param word:
+    :return:
+    """
+    try:
+        return word.encode('ascii').isalnum()
+    except UnicodeEncodeError:
+        return False
 
 def gen_token(user, operation, expire_in=None, **kwargs):
     """

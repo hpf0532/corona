@@ -3,35 +3,43 @@
 Corona是基于ansible api开发的一款用于远程提交执行playbook的管理系统
 
 ## Components
-- 语言: python3.6
+- python版本: python3.6
 - 后端框架: flask-1.1.1
 - 任务执行框架: celery-4.4.1
 - 前端框架: vue-2.9.6
 
 ## Installation
+1. 安装python-devel  
+由于阿里云OSS SDK需要crcmod库计算CRC校验码，而crcmod依赖Python.h文件，如果系统缺少这个头文件，安装SDK不会失败，但crcmod的C扩展模式安装会失败，因此导致上传、下载等操作效率非常低下。如果python-devel包不存在，则首先要安装这个包。
+```bash
+# 对于CentOS、RHEL、Fedora系统，请执行以下命令安装python-devel：
+$ yum install -y python-devel
+# 对于Debian，Ubuntu系统，请执行以下命令安装python-devel：
+$ apt-get install python-dev
+```
 
-1. 配置python虚拟环境
+2. 配置python虚拟环境
 ```bash
 $ virtualenv --python=/usr/bin/python3 corona
 $ source corona/bin/activate
 ```
 
-2. 安装supervisor
+3. 安装supervisor
 ```bash
 pip3 install git+https://github.com/Supervisor/supervisor#egg=supervisor
 ```
 
-3. 下载源码
+4. 下载源码
 ```bash
 $ git clone https://github.com/hpf0532/corona.git
 ```
 
-4. 安装依赖
+5. 安装依赖
 ```bash
 pip3 install -i https://pypi.tuna.tsinghua.edu.cn/simple -r requirements.txt
 ```
 
-5. 导入sql(mysql)
+6. 导入sql(mysql)
 ```bash
 mysql -uroot -p < sql/ansible.sql
 
@@ -41,7 +49,7 @@ mysql -uroot -p < sql/ansible.sql
 > flush privileges;
 ```
 
-6. 修改配置
+7. 修改配置
 ```
 backend/settings.py  .env  .flaskenv修改相关配置
 ```

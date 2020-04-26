@@ -24,6 +24,7 @@ class User(db.Model):
     username = db.Column(db.String(48), unique=True, nullable=False)
     email = db.Column(db.String(64), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
+    bucket = db.Column(db.String(64), nullable=True, comment="用户桶名称")
 
     avatar_s = db.Column(db.String(64))
     avatar_m = db.Column(db.String(64))

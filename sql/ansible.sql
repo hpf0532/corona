@@ -50,7 +50,7 @@ CREATE TABLE `ansibletask` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `ansibletask_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
   CONSTRAINT `ansibletask_ibfk_2` FOREIGN KEY (`option_id`) REFERENCES `options` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=275 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for environment
@@ -60,7 +60,7 @@ CREATE TABLE `environment` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 
 INSERT INTO `ansible`.`environment` (`id`, `name`) VALUES ('1', 'test');
@@ -82,7 +82,7 @@ CREATE TABLE `host` (
   UNIQUE KEY `ip` (`ip`),
   KEY `group_id` (`group_id`),
   CONSTRAINT `host_ibfk_1` FOREIGN KEY (`group_id`) REFERENCES `host_group` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=40 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 INSERT INTO `ansible`.`host` (`id`, `hostname`, `ip`, `port`, `group_id`) VALUES ('1', 'localhost', '127.0.0.1', '22', NULL);
 
@@ -97,7 +97,7 @@ CREATE TABLE `host_group` (
   `description` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`)
-) ENGINE=InnoDB AUTO_INCREMENT=70 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for options
@@ -114,7 +114,7 @@ CREATE TABLE `options` (
   KEY `playbook_id` (`playbook_id`),
   CONSTRAINT `options_ibfk_1` FOREIGN KEY (`env_id`) REFERENCES `environment` (`id`),
   CONSTRAINT `options_ibfk_2` FOREIGN KEY (`playbook_id`) REFERENCES `playbook` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=12 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for playbook
@@ -129,7 +129,7 @@ CREATE TABLE `playbook` (
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `information` (`information`)
-) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for playbook_detail
@@ -142,7 +142,7 @@ CREATE TABLE `playbook_detail` (
   PRIMARY KEY (`id`),
   KEY `playbook_id` (`playbook_id`),
   CONSTRAINT `playbook_detail_ibfk_1` FOREIGN KEY (`playbook_id`) REFERENCES `playbook` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
 -- Table structure for user
@@ -157,7 +157,8 @@ CREATE TABLE `user` (
   `avatar_m` varchar(64) DEFAULT NULL,
   `avatar_s` varchar(64) DEFAULT NULL,
   `confirmed` tinyint(1) DEFAULT NULL,
+  `bucket` varchar(64) DEFAULT NULL COMMENT '用户桶名称',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
-) ENGINE=InnoDB AUTO_INCREMENT=26 DEFAULT CHARSET=utf8mb4;
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;

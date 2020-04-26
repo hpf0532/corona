@@ -16,9 +16,9 @@ from backend.models import HostGroup, Host, PlayBook, PlayBookDetail
 from backend.api.v1.schemas import group_schema, groups_schema, host_schema, hosts_schema, playbook_schema, \
     playbooks_schema, play_detail_schema, host_group_schema
 from backend.extensions import db
-from backend.utils import api_abort, validate_ip, validate_group_id, validate_playbook
+from backend.utils.utils import api_abort, validate_ip, validate_group_id, validate_playbook
 from backend.settings import playbook_dir
-from backend.utils import model_to_dict
+from backend.utils.utils import model_to_dict
 
 # 主机组参数校验
 groups_args = {
