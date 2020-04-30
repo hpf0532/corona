@@ -162,3 +162,22 @@ CREATE TABLE `user` (
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
+
+DROP TABLE IF EXISTS `file_repository`;
+CREATE TABLE `file_repository` (
+  `id` int(11) NOT NULL AUTO_INCREMENT,
+  `user_id` int(11) NOT NULL,
+  `file_type` int(11) DEFAULT NULL COMMENT '文件类型',
+  `file_path` varchar(255) DEFAULT NULL COMMENT '文件路径',
+  `file_size` int(11) DEFAULT NULL COMMENT '文件大小/字节',
+  `key` varchar(128) DEFAULT NULL COMMENT '文件存储在OSS中的KEY',
+  `name` varchar(32) NOT NULL COMMENT '文件/文件夹名称',
+  `parent_id` int(11) DEFAULT NULL COMMENT '父级目录id',
+  `update_datetime` datetime DEFAULT NULL COMMENT '更新时间',
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `name` (`name`),
+  KEY `user_id` (`user_id`),
+  KEY `parent_id` (`parent_id`),
+  CONSTRAINT `file_repository_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
+  CONSTRAINT `file_repository_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `file_repository` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;

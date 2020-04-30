@@ -1,4 +1,6 @@
 import sqlalchemy
+from sqlalchemy_utils import ChoiceType
+import sqlalchemy_utils
 import json
 import datetime
 # from sqlalchemy import create_engine, Column, DateTime, Integer, String, Text
@@ -6,6 +8,7 @@ import datetime
 # from sqlalchemy.orm import sessionmaker
 from backend.extensions import db
 from flask_avatars import Identicon
+
 
 # connstr = "{}://{}:{}@{}:{}/{}".format(
 #     "mysql+pymysql", "ansible", "qingdao@123QWE",
@@ -17,8 +20,8 @@ from flask_avatars import Identicon
 # Base = declarative_base()
 
 
-# 用户表
 class User(db.Model):
+    """用户表"""
     __tablename__ = 'user'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     username = db.Column(db.String(48), unique=True, nullable=False)
@@ -49,8 +52,8 @@ class User(db.Model):
         return '<User %r>' % self.username
 
 
-# 主机表
 class Host(db.Model):
+    """主机表"""
     __tablename__ = 'host'
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     hostname = db.Column(db.String(60), nullable=False, unique=True)
@@ -64,8 +67,8 @@ class Host(db.Model):
         return '<Host %r>' % self.hostname
 
 
-# 主机组表
 class HostGroup(db.Model):
+    """主机组表"""
     __tablename__ = 'host_group'
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     name = db.Column(db.String(48), nullable=False, unique=True)
@@ -78,6 +81,7 @@ class HostGroup(db.Model):
 
 
 class PlayBook(db.Model):
+    """playbook表"""
     __tablename__ = 'playbook'
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     name = db.Column(db.String(48), nullable=False, unique=True)
@@ -128,8 +132,8 @@ class Options(db.Model):
         return '<Options %r>' % self.name
 
 
-# 创建ansible任务表
 class AnsibleTasks(db.Model):
+    """ansible任务表"""
     __tablename__ = 'ansibletask'
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     ansible_id = db.Column(db.String(80), unique=True, nullable=True)
@@ -155,6 +159,25 @@ class AnsibleTasks(db.Model):
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.ansible_id)
+
+
+class FileRepository(db.Model):
+    """文件库"""
+    __tablename__ = 'file_repository'
+    id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
+    user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
+    file_type_choices = (
+        (1, '文件'),
+        (2, '文件夹')
+    )
+    file_type = db.Column(ChoiceType(file_type_choices, db.Integer()), nullable=True, comment="文件类型")
+    name = db.Column(db.String(32), nullable=False, unique=True, comment="文件/文件夹名称")
+    key = db.Column(db.String(128), nullable=True, comment="文件存储在OSS中的KEY")
+    file_size = db.Column(db.Integer, nullable=True, comment="文件大小/字节")
+    file_path = db.Column(db.String(255), nullable=True, comment="文件路径")
+    parent_id = db.Column(db.Integer, db.ForeignKey('file_repository.id'), nullable=True, comment="父级目录id")
+    update_datetime = db.Column(db.DateTime, default=datetime.datetime.now, comment="更新时间")
+
 
 # 删除继承自Base的所有表
 # Base.metadata.drop_all(engine)
