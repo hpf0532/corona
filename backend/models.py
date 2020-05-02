@@ -171,12 +171,18 @@ class FileRepository(db.Model):
         (2, '文件夹')
     )
     file_type = db.Column(ChoiceType(file_type_choices, db.Integer()), nullable=True, comment="文件类型")
-    name = db.Column(db.String(32), nullable=False, unique=True, comment="文件/文件夹名称")
+    name = db.Column(db.String(32), nullable=False, comment="文件/文件夹名称")
     key = db.Column(db.String(128), nullable=True, comment="文件存储在OSS中的KEY")
     file_size = db.Column(db.Integer, nullable=True, comment="文件大小/字节")
     file_path = db.Column(db.String(255), nullable=True, comment="文件路径")
     parent_id = db.Column(db.Integer, db.ForeignKey('file_repository.id'), nullable=True, comment="父级目录id")
     update_datetime = db.Column(db.DateTime, default=datetime.datetime.now, comment="更新时间")
+
+    user = db.relationship('User')
+    parent = db.relationship('FileRepository', remote_side=[id], backref='childs')
+
+    def __repr__(self):
+        return "<{}: {}>".format(self.__class__.__name__, self.id)
 
 
 # 删除继承自Base的所有表

@@ -222,3 +222,26 @@ def envs_schema(envs):
         'items': [env_schema(item) for item in envs],
         'count': len(envs)
     }
+
+
+def file_schema(file):
+    """文件信息"""
+    return {
+        'id': file.id,
+        'kind': 'File',
+        'filename': file.name,
+        'file_size': file.file_size,
+        'file_type': file.file_type.code,
+        'user': file.user.username,
+        'update_time': int(file.update_datetime.timestamp())
+    }
+
+
+def files_schema(files, folder_id):
+    return {
+        'self': url_for('api_v1.files', folder=folder_id, _external=True),
+        'kind': 'FilesCollection',
+        'items': [file_schema(file) for file in files],
+        'count': len(files),
+        'parent_id': folder_id
+    }

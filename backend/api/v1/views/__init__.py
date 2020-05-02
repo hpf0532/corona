@@ -4,4 +4,4 @@
 # File: __init__.py.py
 # IDE: PyCharm
 
-from . import auth, inventory, task, user
+from . import auth, inventory, task, user, file
