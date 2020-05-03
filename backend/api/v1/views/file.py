@@ -3,6 +3,7 @@
 # Date: 2020/5/1 上午12:22
 # File: file.py
 # IDE: PyCharm
+from datetime import datetime
 
 from webargs import fields
 from webargs.flaskparser import use_args
@@ -25,7 +26,7 @@ folder_args = {
 }
 
 
-@api_v1.route('/file/check_folder', methods=['POST'])
+@api_v1.route('/filerepo/check_folder', methods=['POST'])
 @auth_required
 def check_folder_exist():
     """检测文件夹是否已创建接口 1为已创建, 0为未创建"""
@@ -46,7 +47,7 @@ def check_folder_exist():
     return jsonify(ret)
 
 
-class FilesAPI(MethodView):
+class FileListAPI(MethodView):
     decorators = [auth_required]
     parent_object = None
 
@@ -63,7 +64,19 @@ class FilesAPI(MethodView):
             # 根目录
             file_obj_list = queryset.filter_by(parent=None).order_by(text('-file_type')).all()
         print(file_obj_list)
-        return jsonify(files_schema(file_obj_list, self.parent_object.id if self.parent_object else None))
+        # 计算导航条
+        breadcrumb_list = []
+        parent = self.parent_object
+        while parent:
+            breadcrumb_list.insert(0, {'id': parent.id, 'name': parent.name})
+            parent = parent.parent
+        print(breadcrumb_list)
+        return jsonify(
+            files_schema(file_obj_list, self.parent_object.id if self.parent_object else None, breadcrumb_list))
+
+
+class FolderAPI(MethodView):
+    decorators = [auth_required]
 
     @use_args(folder_args, location='json')
     def post(self, args):
@@ -83,6 +96,20 @@ class FilesAPI(MethodView):
         response.status_code = 201
         return response
 
+    @use_args(folder_args, location='json')
+    def put(self, args, folder_id):
+        folder_obj = FileRepository.query.get_or_404(folder_id)
+        folder_obj.name = args['name']
+        folder_obj.update_datetime = datetime.now()
+        try:
+            db.session.add(folder_obj)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return api_abort(400, "数据保存失败")
+        return jsonify(file_schema(folder_obj))
+
 
 @api_v1.route("/file", methods=["GET"])
 def file():
@@ -97,4 +124,6 @@ def file():
     return jsonify({"status": 200})
 
 
-api_v1.add_url_rule('/files', view_func=FilesAPI.as_view('files'), methods=['GET', 'POST'])
+api_v1.add_url_rule('/filerepo/filelist', view_func=FileListAPI.as_view('files'), methods=['GET'])
+api_v1.add_url_rule('/filerepo/folder', view_func=FolderAPI.as_view('folder_add'), methods=['POST'])
+api_v1.add_url_rule('/filerepo/folder/<int:folder_id>', view_func=FolderAPI.as_view('folder_put'), methods=['PUT'])

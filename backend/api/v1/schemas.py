@@ -237,11 +237,12 @@ def file_schema(file):
     }
 
 
-def files_schema(files, folder_id):
+def files_schema(files, folder_id, breadcrumb_list):
     return {
         'self': url_for('api_v1.files', folder=folder_id, _external=True),
         'kind': 'FilesCollection',
         'items': [file_schema(file) for file in files],
         'count': len(files),
-        'parent_id': folder_id
+        'parent_id': folder_id,
+        'breadcrumb_list': breadcrumb_list
     }
