@@ -16,6 +16,7 @@ from backend.decorators import auth_required
 from backend.models import FileRepository
 from backend.extensions import db
 from backend.utils.utils import api_abort
+from backend.utils.aliyun.oss import delete_file
 
 # folder_args = 1
 folder_args = {
@@ -97,8 +98,8 @@ class FolderAPI(MethodView):
         return response
 
     @use_args(folder_args, location='json')
-    def put(self, args, folder_id):
-        folder_obj = FileRepository.query.get_or_404(folder_id)
+    def put(self, args, fid):
+        folder_obj = FileRepository.query.get_or_404(fid)
         folder_obj.name = args['name']
         folder_obj.update_datetime = datetime.now()
         try:
@@ -109,6 +110,27 @@ class FolderAPI(MethodView):
             db.session.rollback()
             return api_abort(400, "数据保存失败")
         return jsonify(file_schema(folder_obj))
+
+    def delete(self, fid):
+        # 删除数据库中的 文件 & 文件夹 （级联删除）
+        del_obj = FileRepository.query.get_or_404(fid)
+        if del_obj.file_type.code == 1:
+            # 删除文件，将容量还给当前项目的已使用空间
+            # g.user.use_space -= del_obj.file_size
+            # db.session.commit()
+
+            # oss中删除文件
+            # delete_file(g.user.bucket, del_obj.key)
+
+            # 在数据库中删除文件
+            # db.session.delete(del_obj)
+            # db.session.commit()
+            pass
+        else:
+            pass
+        db.session.delete(del_obj)
+        db.session.commit()
+        return '', 204
 
 
 @api_v1.route("/file", methods=["GET"])
@@ -126,4 +148,5 @@ def file():
 
 api_v1.add_url_rule('/filerepo/filelist', view_func=FileListAPI.as_view('files'), methods=['GET'])
 api_v1.add_url_rule('/filerepo/folder', view_func=FolderAPI.as_view('folder_add'), methods=['POST'])
-api_v1.add_url_rule('/filerepo/folder/<int:folder_id>', view_func=FolderAPI.as_view('folder_put'), methods=['PUT'])
+api_v1.add_url_rule('/filerepo/folder/<int:fid>', view_func=FolderAPI.as_view('folder_put_delete'),
+                    methods=['PUT', 'DELETE'])

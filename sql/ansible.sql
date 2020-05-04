@@ -158,6 +158,7 @@ CREATE TABLE `user` (
   `avatar_s` varchar(64) DEFAULT NULL,
   `confirmed` tinyint(1) DEFAULT NULL,
   `bucket` varchar(64) DEFAULT NULL COMMENT '用户桶名称',
+  `use_space` int(11) DEFAULT NULL COMMENT '用户已使用空间',
   PRIMARY KEY (`id`),
   UNIQUE KEY `username` (`username`),
   UNIQUE KEY `email` (`email`)

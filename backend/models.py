@@ -28,6 +28,7 @@ class User(db.Model):
     email = db.Column(db.String(64), unique=True, nullable=False)
     password = db.Column(db.String(128), nullable=False)
     bucket = db.Column(db.String(64), nullable=True, comment="用户桶名称")
+    use_space = db.Column(db.Integer, default=0, comment="用户已使用空间")
 
     avatar_s = db.Column(db.String(64))
     avatar_m = db.Column(db.String(64))
@@ -179,7 +180,8 @@ class FileRepository(db.Model):
     update_datetime = db.Column(db.DateTime, default=datetime.datetime.now, comment="更新时间")
 
     user = db.relationship('User')
-    parent = db.relationship('FileRepository', remote_side=[id], backref='childs')
+    parent = db.relationship('FileRepository', remote_side=[id], back_populates='childs')
+    childs = db.relationship('FileRepository', back_populates='parent', cascade='all')
 
     def __repr__(self):
         return "<{}: {}>".format(self.__class__.__name__, self.id)

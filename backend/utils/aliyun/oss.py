@@ -26,3 +26,15 @@ def create_bucket(bucket):
 
     # 设置跨域规则
     bucket.put_bucket_cors(BucketCors([rule]))
+
+
+def delete_file(bucket, key):
+    """
+    删除单个文件
+    :param bucket: 桶名称
+    :param key: 文件key
+    :return:
+    """
+    auth = oss2.Auth(current_app.config['ACCESS_KEY_ID'], current_app.config['ACCESS_KEY_SECRET'])
+    bucket = oss2.Bucket(auth, current_app.config['OSS_ENDPOINT'], bucket)
+    bucket.delete_object(key)
