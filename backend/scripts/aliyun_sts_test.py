@@ -10,9 +10,9 @@ from aliyunsdksts.request.v20150401 import AssumeRoleRequest
 import json
 import oss2
 
-access_key_id = 'LTAI7ojt8k01JjAV'
-access_key_secret = 'Vhy0IH3n5ZFgnT892i3clEnrIjQiln'
-role_arn = 'acs:ram::1866119230478122:role/ramoss'
+access_key_id = 'xxxxxxxxxxxx'
+access_key_secret = 'xxxxxxxxxxxxxxxx'
+role_arn = 'xxxxxxxxxxxxxxxs'
 
 clt = client.AcsClient(access_key_id, access_key_secret, 'cn-beijing')
 req = AssumeRoleRequest.AssumeRoleRequest()
