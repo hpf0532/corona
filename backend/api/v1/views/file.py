@@ -16,7 +16,7 @@ from backend.decorators import auth_required
 from backend.models import FileRepository
 from backend.extensions import db
 from backend.utils.utils import api_abort
-from backend.utils.aliyun.oss import delete_file
+from backend.utils.aliyun.oss import delete_file, delete_file_list, get_sts_token
 
 # folder_args = 1
 folder_args = {
@@ -64,14 +64,12 @@ class FileListAPI(MethodView):
         else:
             # 根目录
             file_obj_list = queryset.filter_by(parent=None).order_by(text('-file_type')).all()
-        print(file_obj_list)
         # 计算导航条
         breadcrumb_list = []
         parent = self.parent_object
         while parent:
             breadcrumb_list.insert(0, {'id': parent.id, 'name': parent.name})
             parent = parent.parent
-        print(breadcrumb_list)
         return jsonify(
             files_schema(file_obj_list, self.parent_object.id if self.parent_object else None, breadcrumb_list))
 
@@ -114,23 +112,64 @@ class FolderAPI(MethodView):
     def delete(self, fid):
         # 删除数据库中的 文件 & 文件夹 （级联删除）
         del_obj = FileRepository.query.get_or_404(fid)
-        if del_obj.file_type.code == 1:
-            # 删除文件，将容量还给当前项目的已使用空间
-            # g.user.use_space -= del_obj.file_size
-            # db.session.commit()
+        # if del_obj.file_type.code == 1:
+        # 删除文件，将容量还给当前项目的已使用空间
+        # g.user.use_space -= del_obj.file_size
+        # db.session.commit()
 
-            # oss中删除文件
-            # delete_file(g.user.bucket, del_obj.key)
+        # oss中删除文件
+        # delete_file(g.user.bucket, del_obj.key)
 
-            # 在数据库中删除文件
-            # db.session.delete(del_obj)
-            # db.session.commit()
-            pass
-        else:
-            pass
+        # 在数据库中删除文件
+        # db.session.delete(del_obj)
+        # db.session.commit()
+        # return '', 204
+        # 文件夹删除，需要找到文件夹下面的文件和文件夹，如果是文件，则归还容量并删除，如果是文件夹则继续循环
+        # total_size = 0
+        # key_list = []
+        #
+        # folder_list = [del_obj, ]
+        # for folder in folder_list:
+        #     child_list = FileRepository.query.filter(user=g.user, parent=del_obj).order_by(text('-file_type')).all()
+        #     for child in child_list:
+        #         if child.file_type == 2:
+        #             folder_list.append(child)
+        #         else:
+        # 文件大小汇总
+        # total_size += child.file_size
+        # 加入删除文件列表
+        # key_list.append(child.key)
+
+        # OSS批量删除文件
+        # if key_list:
+        #     delete_file_list(g.user.bucket, key_list)
+
+        # 归还用户已使用空间
+        # if total_size:
+        #     g.user.use_space -= total_size
+        #     db.session.commit()
+
         db.session.delete(del_obj)
         db.session.commit()
         return '', 204
+
+
+class StsTokenAPI(MethodView):
+    """获取OSS临时token"""
+    decorators = [auth_required]
+
+    def post(self):
+        filename = request.json.get("name")
+        filesize = request.json.get("size")
+        if not filename or not filesize:
+            return api_abort(400, "请选择文件")
+        print(filename, filesize)
+        token = get_sts_token()
+        print(token)
+        token['region'] = current_app.config['OSS_REGION']
+        token['bucket'] = g.user.bucket
+
+        return jsonify(token)
 
 
 @api_v1.route("/file", methods=["GET"])
@@ -150,3 +189,4 @@ api_v1.add_url_rule('/filerepo/filelist', view_func=FileListAPI.as_view('files')
 api_v1.add_url_rule('/filerepo/folder', view_func=FolderAPI.as_view('folder_add'), methods=['POST'])
 api_v1.add_url_rule('/filerepo/folder/<int:fid>', view_func=FolderAPI.as_view('folder_put_delete'),
                     methods=['PUT', 'DELETE'])
+api_v1.add_url_rule('/filerepo/sts_token', view_func=StsTokenAPI.as_view('sts_token'), methods=['POST'])
