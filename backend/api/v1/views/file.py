@@ -5,11 +5,12 @@
 # IDE: PyCharm
 import random
 import time
+import requests
 from datetime import datetime
-
+from urllib.parse import quote
 from webargs import fields
 from webargs.flaskparser import use_args
-from flask import jsonify, request, g, current_app
+from flask import jsonify, request, g, current_app, Response, make_response
 from flask.views import MethodView
 from sqlalchemy import text
 from backend.api.v1 import api_v1
@@ -234,6 +235,28 @@ class StsTokenAPI(MethodView):
         return jsonify(token)
 
 
+class FileDownloadAPI(MethodView):
+    """下载文件"""
+
+    # decorators = [auth_required]
+
+    def get(self, file_id):
+        file_obj = FileRepository.query.get_or_404(file_id)
+
+        res = requests.get(file_obj.file_path)
+
+        # 文件分块处理，适用于大文件
+        data = res.iter_content()
+
+        response = make_response(Response(data))
+        # 设置响应头，用于提示下载框
+        response.headers['content_type'] = "application/octet-stream"
+        # 设置用户名，增加中文转义
+        response.headers['Content-Disposition'] = "attachment; filename={};".format(quote(file_obj.name, 'utf-8'))
+
+        return response
+
+
 @api_v1.route("/file", methods=["GET"])
 def file():
     query = FileRepository.query.filter(
@@ -253,3 +276,5 @@ api_v1.add_url_rule('/filerepo/folder/<int:fid>', view_func=FolderAPI.as_view('f
                     methods=['PUT', 'DELETE'])
 api_v1.add_url_rule('/filerepo/sts_token', view_func=StsTokenAPI.as_view('sts_token'), methods=['POST'])
 api_v1.add_url_rule('/filerepo/file_post', view_func=FilePostAPI.as_view('file_post'), methods=['POST'])
+api_v1.add_url_rule('/filerepo/download/<int:file_id>', view_func=FileDownloadAPI.as_view('file_download'),
+                    methods=['GET'])
