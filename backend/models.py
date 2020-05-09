@@ -172,7 +172,7 @@ class FileRepository(db.Model):
         (2, '文件夹')
     )
     file_type = db.Column(ChoiceType(file_type_choices, db.Integer()), nullable=True, comment="文件类型")
-    name = db.Column(db.String(32), nullable=False, comment="文件/文件夹名称")
+    name = db.Column(db.String(64), nullable=False, comment="文件/文件夹名称")
     key = db.Column(db.String(128), nullable=True, comment="文件存储在OSS中的KEY")
     file_size = db.Column(db.Integer, nullable=True, comment="文件大小/字节")
     file_path = db.Column(db.String(255), nullable=True, comment="文件路径")

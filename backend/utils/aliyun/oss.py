@@ -57,6 +57,19 @@ def delete_file_list(bucket, key_list):
     bucket.batch_delete_objects(key_list)
 
 
+def check_file(bucket, key):
+    """
+    获取文件ETag值
+    :param bucket: 桶
+    :param key: 文件key
+    :return:
+    """
+    auth = oss2.Auth(current_app.config['ACCESS_KEY_ID'], current_app.config['ACCESS_KEY_SECRET'])
+    bucket = oss2.Bucket(auth, current_app.config['OSS_ENDPOINT'], bucket)
+    file_meta = bucket.get_object_meta(key)
+    return file_meta
+
+
 def get_sts_token():
     """
     获取sts临时token

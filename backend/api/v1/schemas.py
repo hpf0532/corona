@@ -233,6 +233,7 @@ def file_schema(file):
         'file_size': file.file_size,
         'file_type': file.file_type.code,
         'user': file.user.username,
+        'file_path': file.file_path,
         'update_time': int(file.update_datetime.timestamp())
     }
 

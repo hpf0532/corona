@@ -3,6 +3,8 @@
 # Date: 2020/5/1 上午12:22
 # File: file.py
 # IDE: PyCharm
+import random
+import time
 from datetime import datetime
 
 from webargs import fields
@@ -13,10 +15,10 @@ from sqlalchemy import text
 from backend.api.v1 import api_v1
 from backend.api.v1.schemas import files_schema, file_schema
 from backend.decorators import auth_required
-from backend.models import FileRepository
+from backend.models import FileRepository, User
 from backend.extensions import db
 from backend.utils.utils import api_abort
-from backend.utils.aliyun.oss import delete_file, delete_file_list, get_sts_token
+from backend.utils.aliyun.oss import delete_file, delete_file_list, get_sts_token, check_file
 
 # folder_args = 1
 folder_args = {
@@ -24,6 +26,20 @@ folder_args = {
         required="文件夹为必填项", validator_failed="名称不能为空", invalid="请输入字符串"
     )),
     'folder_id': fields.Int(required=True)
+}
+
+file_args = {
+    'filename': fields.Str(validate=lambda p: len(p) > 0, required=True, error_messages=dict(
+        required="文件名为必填项", validator_failed="文件名不能为空", invalid="请输入字符串"
+    )),
+    'file_size': fields.Int(required=True),
+    'parent_id': fields.Int(required=True),
+    'key': fields.Str(validate=lambda p: len(p) > 0, required=True, error_messages=dict(
+        required="key为必填项", validator_failed="key不能为空", invalid="请输入字符串"
+    )),
+    'etag': fields.Str(validate=lambda p: len(p) > 0, required=True, error_messages=dict(
+        required="etag为必填项", invalid="请输入字符串"
+    )),
 }
 
 
@@ -34,7 +50,7 @@ def check_folder_exist():
     ret = {"status": 0}
     name = request.json.get("name")
     folder_id = request.json.get("folder_id")
-    print(request.json)
+    # print(request.json)
     if not name:
         return jsonify(ret)
     folder_obj = FileRepository.query.filter(
@@ -112,46 +128,92 @@ class FolderAPI(MethodView):
     def delete(self, fid):
         # 删除数据库中的 文件 & 文件夹 （级联删除）
         del_obj = FileRepository.query.get_or_404(fid)
-        # if del_obj.file_type.code == 1:
-        # 删除文件，将容量还给当前项目的已使用空间
-        # g.user.use_space -= del_obj.file_size
-        # db.session.commit()
+        if del_obj.file_type.code == 1:
+            # 删除文件，将容量还给当前项目的已使用空间
+            g.user.use_space -= del_obj.file_size
+            if g.user.use_space < 0: g.user.use_space = 0
 
-        # oss中删除文件
-        # delete_file(g.user.bucket, del_obj.key)
+            # oss中删除文件
+            delete_file(g.user.bucket, del_obj.key)
 
-        # 在数据库中删除文件
-        # db.session.delete(del_obj)
-        # db.session.commit()
-        # return '', 204
+            # 在数据库中删除文件
+            db.session.delete(del_obj)
+            db.session.commit()
+            return '', 204
         # 文件夹删除，需要找到文件夹下面的文件和文件夹，如果是文件，则归还容量并删除，如果是文件夹则继续循环
-        # total_size = 0
-        # key_list = []
-        #
-        # folder_list = [del_obj, ]
-        # for folder in folder_list:
-        #     child_list = FileRepository.query.filter(user=g.user, parent=del_obj).order_by(text('-file_type')).all()
-        #     for child in child_list:
-        #         if child.file_type == 2:
-        #             folder_list.append(child)
-        #         else:
-        # 文件大小汇总
-        # total_size += child.file_size
-        # 加入删除文件列表
-        # key_list.append(child.key)
+        total_size = 0
+        key_list = []
+
+        folder_list = [del_obj, ]
+        for folder in folder_list:
+            child_list = FileRepository.query.filter_by(user=g.user, parent=folder).order_by(text('-file_type')).all()
+            # print(child_list)
+            for child in child_list:
+                if child.file_type == 2:
+                    folder_list.append(child)
+                else:
+                    # 文件大小汇总
+                    total_size += child.file_size
+                    # 加入删除文件列表
+                    key_list.append(child.key)
 
         # OSS批量删除文件
-        # if key_list:
-        #     delete_file_list(g.user.bucket, key_list)
+        if key_list:
+            delete_file_list(g.user.bucket, key_list)
 
         # 归还用户已使用空间
-        # if total_size:
-        #     g.user.use_space -= total_size
-        #     db.session.commit()
+        if total_size:
+            g.user.use_space -= total_size
+            if g.user.use_space < 0: g.user.use_space = 0
 
         db.session.delete(del_obj)
         db.session.commit()
         return '', 204
+
+
+class FilePostAPI(MethodView):
+    """文件上传后保存至数据库中"""
+    decorators = [auth_required]
+
+    @use_args(file_args, location='json')
+    def post(self, args):
+
+        key = args['key']
+        etag = args['etag']
+
+        # 向OSS校验etag值
+        from oss2.exceptions import NoSuchKey
+        try:
+            res = check_file(g.user.bucket, key)
+            if etag != res.etag:
+                return api_abort(403, "ETag错误")
+        except NoSuchKey as e:
+            return api_abort(403, "文件未上传成功")
+
+        # user = User.query.filter_by(id=g.user.id).with_for_update(read=False).first()
+
+        file_obj = FileRepository(name=args["filename"])
+        file_path = "http://{}.{}.aliyuncs.com/{}".format(g.user.bucket, current_app.config['OSS_REGION'], args['key'])
+        file_obj.user = g.user
+        file_obj.file_type = 1
+        file_obj.file_size = args['file_size']
+        file_obj.parent_id = args['parent_id'] if args['parent_id'] else None
+        file_obj.key = key
+        file_obj.file_path = file_path
+
+        g.user.use_space += args['file_size']
+        db.session.commit()
+
+        # print(g.user.use_space)
+
+        try:
+            db.session.add(file_obj)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return api_abort(400, "数据保存失败")
+        return jsonify(file_schema(file_obj))
 
 
 class StsTokenAPI(MethodView):
@@ -163,9 +225,9 @@ class StsTokenAPI(MethodView):
         filesize = request.json.get("size")
         if not filename or not filesize:
             return api_abort(400, "请选择文件")
-        print(filename, filesize)
+        # print(filename, filesize)
         token = get_sts_token()
-        print(token)
+        # print(token)
         token['region'] = current_app.config['OSS_REGION']
         token['bucket'] = g.user.bucket
 
@@ -178,9 +240,9 @@ def file():
         FileRepository.user_id == 15,
         FileRepository.id == 1
     ).first()
-    print(query.file_type.value)
+    # print(query.file_type.value)
 
-    print(query.childs)
+    # print(query.childs)
 
     return jsonify({"status": 200})
 
@@ -190,3 +252,4 @@ api_v1.add_url_rule('/filerepo/folder', view_func=FolderAPI.as_view('folder_add'
 api_v1.add_url_rule('/filerepo/folder/<int:fid>', view_func=FolderAPI.as_view('folder_put_delete'),
                     methods=['PUT', 'DELETE'])
 api_v1.add_url_rule('/filerepo/sts_token', view_func=StsTokenAPI.as_view('sts_token'), methods=['POST'])
+api_v1.add_url_rule('/filerepo/file_post', view_func=FilePostAPI.as_view('file_post'), methods=['POST'])

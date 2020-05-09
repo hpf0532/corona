@@ -172,7 +172,7 @@ CREATE TABLE `file_repository` (
   `file_path` varchar(255) DEFAULT NULL COMMENT '文件路径',
   `file_size` int(11) DEFAULT NULL COMMENT '文件大小/字节',
   `key` varchar(128) DEFAULT NULL COMMENT '文件存储在OSS中的KEY',
-  `name` varchar(32) NOT NULL COMMENT '文件/文件夹名称',
+  `name` varchar(64) NOT NULL COMMENT '文件/文件夹名称',
   `parent_id` int(11) DEFAULT NULL COMMENT '父级目录id',
   `update_datetime` datetime DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`),
