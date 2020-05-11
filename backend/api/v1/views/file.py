@@ -19,7 +19,7 @@ from backend.decorators import auth_required
 from backend.models import FileRepository, User
 from backend.extensions import db
 from backend.utils.utils import api_abort
-from backend.utils.aliyun.oss import delete_file, delete_file_list, get_sts_token, check_file
+from backend.utils.aliyun.oss import delete_file, delete_file_list, get_sts_token, check_file, create_bucket
 
 # folder_args = 1
 folder_args = {
@@ -65,11 +65,27 @@ def check_folder_exist():
     return jsonify(ret)
 
 
+@api_v1.route('/filerepo/add_bucket', methods=['GET'])
+@auth_required
+def add_bucket():
+    """创建bucket接口"""
+    if g.user.bucket:
+        return api_abort(403, 'bucket已存在，不可重复创建')
+
+    bucket = '{}-{}'.format(g.user.username, str(int(time.time())))
+    # 创建用户桶
+    create_bucket(bucket)
+    g.user.bucket = bucket
+    db.session.commit()
+    return jsonify({'bucket': bucket})
+
+
 class FileListAPI(MethodView):
     decorators = [auth_required]
     parent_object = None
 
     def get(self):
+        bucket = g.user.bucket
         folder_id = request.args.get("folder", type=int)
         if folder_id:
             self.parent_object = FileRepository.query.filter_by(user=g.user, id=folder_id, file_type=2).first()
@@ -88,7 +104,7 @@ class FileListAPI(MethodView):
             breadcrumb_list.insert(0, {'id': parent.id, 'name': parent.name})
             parent = parent.parent
         return jsonify(
-            files_schema(file_obj_list, self.parent_object.id if self.parent_object else None, breadcrumb_list))
+            files_schema(file_obj_list, self.parent_object.id if self.parent_object else None, breadcrumb_list, bucket))
 
 
 class FolderAPI(MethodView):
@@ -226,6 +242,12 @@ class StsTokenAPI(MethodView):
         filesize = request.json.get("size")
         if not filename or not filesize:
             return api_abort(400, "请选择文件")
+
+        if filesize > 5 * 1024 * 1024:
+            return api_abort(403, '单文件不能超过5M')
+
+        if filesize + g.user.use_space > 100 * 1024 * 1024:
+            return api_abort(403, '您的容量已不足，请升级套餐')
         # print(filename, filesize)
         token = get_sts_token()
         # print(token)
@@ -259,10 +281,20 @@ class FileDownloadAPI(MethodView):
 
 @api_v1.route("/file", methods=["GET"])
 def file():
-    query = FileRepository.query.filter(
-        FileRepository.user_id == 15,
-        FileRepository.id == 1
-    ).first()
+    # query = FileRepository.query.filter(
+    #     FileRepository.user_id == 15,
+    #     FileRepository.id == 1
+    # ).first()
+    import oss2
+    from backend.utils.aliyun.oss import delete_bucket
+    try:
+        delete_bucket("hepengfei-159086320")
+    except oss2.exceptions.NoSuchBucket:
+        return api_abort(404, "找不到指定的桶")
+
+    # for b in part:
+    #     print(b.key)
+
     # print(query.file_type.value)
 
     # print(query.childs)

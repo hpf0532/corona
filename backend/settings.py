@@ -79,9 +79,9 @@ class BaseConfig:
     ACCESS_KEY_SECRET = os.getenv('ACCESS_KEY_SECRET')
     ROLE_ARN = os.getenv('ROLE_ARN')
     # oss endpoint
-    OSS_ENDPOINT = 'http://oss-cn-beijing.aliyuncs.com'
+    OSS_ENDPOINT = 'http://oss-cn-qingdao.aliyuncs.com'
     STS_REGION = 'cn-beijing'
-    OSS_REGION = 'oss-cn-beijing'
+    OSS_REGION = 'oss-cn-qingdao'
 
 class MySQLConfig:
     MYSQL_USERNAME = os.getenv('MYSQL_USER')

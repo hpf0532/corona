@@ -6,6 +6,7 @@
 import json
 
 import oss2
+from itertools import islice
 from aliyunsdkcore import client
 from aliyunsdksts.request.v20150401 import AssumeRoleRequest
 from oss2.models import BucketCors, CorsRule
@@ -31,6 +32,46 @@ def create_bucket(bucket):
 
     # 设置跨域规则
     bucket.put_bucket_cors(BucketCors([rule]))
+
+
+def delete_bucket(bucket):
+    """
+    刪除bucket
+    1, 清空bucket下面所有文件
+    2，清空bucket中的碎片文件
+    3，刪除bucket
+    :param bucket: 用戶bucket
+    :return:
+    """
+    auth = oss2.Auth(current_app.config['ACCESS_KEY_ID'], current_app.config['ACCESS_KEY_SECRET'])
+    bucket = oss2.Bucket(auth, current_app.config['OSS_ENDPOINT'], bucket)
+
+    # 找到 & 刪除文件
+    while True:
+        part_obj = bucket.list_objects()
+        if len(part_obj.object_list) == 0:
+            break
+        delete_list = [file.key for file in part_obj.object_list]
+
+        # 批量刪除
+        bucket.batch_delete_objects(delete_list)
+
+        if not part_obj.is_truncated:
+            break
+
+    # 找到 & 刪除碎片文件
+    while True:
+        part_upload = bucket.list_multipart_uploads()
+        if len(part_upload.upload_list) == 0:
+            break
+        for part in part_upload.upload_list:
+            bucket.abort_multipart_upload(key=part.key, upload_id=part.upload_id)
+
+        if not part_upload.is_truncated:
+            break
+
+    # 刪除桶
+    bucket.delete_bucket()
 
 
 def delete_file(bucket, key):
