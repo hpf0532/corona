@@ -19,7 +19,7 @@ class AnsibleOpt:
             (tid, hosts, playbook, extra_vars), link=sync_ansible_result.s(tid=tid),
             link_error=error_handler.s()
         )  # 保存 ansible 结果
-        print(tid, celery_task.task_id, extra_vars, playbook, "===========")
+        # print(tid, celery_task.task_id, extra_vars, playbook, "===========")
         at = AnsibleTasks(
             ansible_id=tid,
             celery_id=celery_task.task_id,

@@ -109,6 +109,7 @@ CREATE TABLE `options` (
   `content` text,
   `playbook_id` int(11) NOT NULL,
   `env_id` int(11) DEFAULT NULL,
+  `url` varchar(128) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `env_id` (`env_id`),
   KEY `playbook_id` (`playbook_id`),

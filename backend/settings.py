@@ -33,6 +33,9 @@ BACKEND = "redis://:%s@%s:%s/%s" % (REDIS_PD, REDIS_ADDR, REDIS_PORT, result_db)
 
 # 连接池
 POOL = redis.ConnectionPool(host=REDIS_ADDR, port=REDIS_PORT, password=REDIS_PD, db=ansible_result_redis_db)
+DINGDING_URL = os.getenv('DINGDING_URL')
+ROBOT_SECRET = os.getenv('ROBOT_SECRET')
+DINGDING_CONTACTS = ["13370800273"]
 
 
 # token操作类型

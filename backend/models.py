@@ -125,6 +125,7 @@ class Options(db.Model):
     content = db.Column(db.Text, nullable=True)
     playbook_id = db.Column(db.Integer, db.ForeignKey('playbook.id'), nullable=False)
     env_id = db.Column(db.Integer, db.ForeignKey('environment.id'))
+    url = db.Column(db.String(128), nullable=True)
 
     playbook = db.relationship('PlayBook')
     env = db.relationship('Environment')
