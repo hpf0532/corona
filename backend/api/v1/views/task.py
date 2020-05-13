@@ -28,8 +28,8 @@ options_args = {
         required="playbook必填项"
     )),
     'content': fields.Dict(required=True),
-    'env_id': fields.Int(validate=validate_env_id, missing=None),
-    'url': fields.Url(required=True)
+    'env_id': fields.Int(validate=validate_env_id, missing=None, allow_none=True),
+    'url': fields.Url(required=False, allow_none=True, missing=None, default=None)
 }
 
 
@@ -50,6 +50,7 @@ class PlayBookOptionAPI(MethodView):
         option.playbook_id = args['playbook_id']
         option.env_id = args.get('env_id')
         option.url = args.get('url')
+
 
         try:
             db.session.add(option)
@@ -107,6 +108,7 @@ class PlayBookOptionsAPI(MethodView):
         option.env_id = args.get('env_id')
         option.url = args.get('url')
 
+        print(type(option.content), option.content)
         try:
             db.session.add(option)
             db.session.commit()

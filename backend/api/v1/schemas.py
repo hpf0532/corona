@@ -178,8 +178,8 @@ def option_schema(option):
         'kind': 'Option',
         'self': url_for('api_v1.option', option_id=option.id, _external=True),
         'name': option.name,
-        'content': option.content,
-        'url': option.url,
+        'content': json.loads(option.content),
+        'url': option.url if option.url else None,
         'playbook': option.playbook.id if option.playbook else None,
         'env': option.env.id if option.env else None
     }
