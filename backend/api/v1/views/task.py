@@ -28,7 +28,7 @@ options_args = {
         required="playbook必填项"
     )),
     'content': fields.Dict(required=True),
-    'env_id': fields.Int(validate=validate_env_id, missing=None, allow_none=True),
+    'env_id': fields.Int(required=False, validate=validate_env_id, allow_none=True, missing=None, default=None),
     'url': fields.Url(required=False, allow_none=True, missing=None, default=None)
 }
 
