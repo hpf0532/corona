@@ -156,9 +156,12 @@ class TasksAPI(MethodView):
         start = request.args.get('startTime', type=int)
         end = request.args.get('endTime', type=int)
         user = request.args.get('user')
+        ansible_id = request.args.get('ansibleId')
 
         per_page = limit or current_app.config['BACK_ITEM_PER_PAGE']
         pagination = AnsibleTasks.query.filter(
+            # 根据ansible_id查询任务
+            AnsibleTasks.ansible_id.like("%" + ansible_id + "%") if ansible_id else text(''),
             # 根据时间区间查询相应的任务
             AnsibleTasks.create_time > datetime.fromtimestamp(start) if start else text(''),
             AnsibleTasks.create_time < datetime.fromtimestamp(end) if end else text(''),
