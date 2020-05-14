@@ -19,6 +19,7 @@ from webargs.flaskparser import use_args
 from backend.utils.utils import api_abort, gen_token, validate_token, get_random_color, gen_captcha, validate_capcha, \
     isAlnum
 from backend.utils.aliyun.oss import create_bucket
+from backend.utils.capcha_code import check_code
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.decorators import auth_required
@@ -35,26 +36,27 @@ reset_password_args = {
 @api_v1.route("/capcha", methods=["GET"])
 @limiter.limit("10/minute", error_message="获取验证码超频")
 def get_capcha():
-    height = 180
-    width = 40
+    # height = 180
+    # width = 40
+    #
+    # # 生成image对象
+    # img_obj = Image.new(
+    #     'RGB',
+    #     (height, width),
+    #     get_random_color()
+    # )
+    # # 在生成的图片上写字符
+    # # 生成一个图片画笔对象
+    # draw_obj = ImageDraw.Draw(img_obj)
+    # # 加载字体文件， 得到一个字体对象
+    # font_path = os.path.join(basedir, os.getenv("FLASK_APP"), "static/font/kumo.ttf")
+    # font_obj = ImageFont.truetype(font_path, 32)
+    # # 开始生成随机字符串并且写到图片上
+    # capcha, cap_list = gen_captcha()
+    # for i, letter in enumerate(cap_list):
+    #     draw_obj.text((20 + 40 * i, 0), letter, fill=get_random_color(), font=font_obj)
 
-    # 生成image对象
-    img_obj = Image.new(
-        'RGB',
-        (height, width),
-        get_random_color()
-    )
-    # 在生成的图片上写字符
-    # 生成一个图片画笔对象
-    draw_obj = ImageDraw.Draw(img_obj)
-    # 加载字体文件， 得到一个字体对象
-    font_path = os.path.join(basedir, os.getenv("FLASK_APP"), "static/font/kumo.ttf")
-    font_obj = ImageFont.truetype(font_path, 32)
-    # 开始生成随机字符串并且写到图片上
-    capcha, cap_list = gen_captcha()
-    for i, letter in enumerate(cap_list):
-        draw_obj.text((20 + 40 * i, 0), letter, fill=get_random_color(), font=font_obj)
-
+    img_obj, capcha = check_code()
     # 将图片保存至内存中
     io_obj = BytesIO()
     img_obj.save(io_obj, 'png')
