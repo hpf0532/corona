@@ -249,3 +249,21 @@ def files_schema(files, folder_id, breadcrumb_list, bucket):
         'breadcrumb_list': breadcrumb_list,
         'bucket': bucket
     }
+
+
+def category_schema(category):
+    return {
+        'id': category.id,
+        'kind': 'WikiCategory',
+        'self': url_for('api_v1.category', category_id=category.id, _external=True),
+        'name': category.name,
+    }
+
+
+def categorys_schema(categorys):
+    return {
+        'self': url_for('api_v1.categorys', _external=True),
+        'kind': 'CategoryCollection',
+        'items': [category_schema(item) for item in categorys],
+        'count': len(categorys)
+    }

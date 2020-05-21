@@ -160,7 +160,7 @@ class GroupAPI(MethodView):
 
 
 class GroupsAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self):
         """获取所有主机组接口"""
@@ -269,7 +269,7 @@ class PlaybooksAPI(MethodView):
 
 
 class HostGroupSelectAPI(MethodView):
-    # decorators = [auth_required]
+    decorators = [auth_required]
 
     def get(self):
         data_list = []

@@ -188,6 +188,26 @@ class FileRepository(db.Model):
         return "<{}: {}>".format(self.__class__.__name__, self.id)
 
 
+class Category(db.Model):
+    """wiki分类表"""
+    __tablename__ = 'category'
+    id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(32), unique=True, comment="分类名称")
+    posts = db.relationship('Post', back_populates='category')
+
+
+class Post(db.Model):
+    """wiki文章表"""
+    id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
+    title = db.Column(db.String(60), nullable=False, comment="文章标题")
+    body = db.Column(db.Text)
+    create_time = db.Column(db.DateTime, default=datetime.datetime.now, comment="创建时间")
+    update_time = db.Column(db.DateTime, default=datetime.datetime.now, comment="更新时间")
+    # 与分类表关联
+    category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
+    category = db.relationship('Category', back_populates='posts')
+
+
 # 删除继承自Base的所有表
 # Base.metadata.drop_all(engine)
 # 创建继承自Base的所有表
