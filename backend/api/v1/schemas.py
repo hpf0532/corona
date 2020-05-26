@@ -257,6 +257,7 @@ def category_schema(category):
         'kind': 'WikiCategory',
         'self': url_for('api_v1.category', category_id=category.id, _external=True),
         'name': category.name,
+        'posts': len(category.posts)
     }
 
 
@@ -266,4 +267,28 @@ def categorys_schema(categorys):
         'kind': 'CategoryCollection',
         'items': [category_schema(item) for item in categorys],
         'count': len(categorys)
+    }
+
+
+def post_schema(post):
+    return {
+        'self': url_for('api_v1.posts', post_id=post.id, _external=True),
+        'kind': 'WikiPost',
+        'title': post.title,
+        'desc': post.desc,
+        'create_time': int(post.create_time.timestamp()),
+        'author': post.author.username
+    }
+
+
+def posts_schema(items, current, prev, next, pagination):
+    return {
+        'self': current,
+        'kind': 'PostCollection',
+        'items': [post_schema(item) for item in items],
+        'prev': prev,
+        'first': url_for('api_v1.posts', page=1, _external=True),
+        'last': url_for('api_v1.posts', page=pagination.pages, _external=True),
+        'next': next,
+        'count': pagination.total
     }

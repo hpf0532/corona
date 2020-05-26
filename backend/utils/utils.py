@@ -14,7 +14,7 @@ from jwt import ExpiredSignatureError, InvalidTokenError
 from flask import jsonify, current_app
 from werkzeug.http import HTTP_STATUS_CODES
 from webargs import ValidationError
-from backend.models import HostGroup, PlayBook, Environment
+from backend.models import HostGroup, PlayBook, Environment, Category
 from backend.settings import playbook_dir, Operations, POOL
 from backend.extensions import db
 
@@ -114,6 +114,12 @@ def validate_env_id(val):
     pid = Environment.query.get(val)
     if not pid:
         raise ValidationError("环境参数错误")
+
+
+def validate_category_id(val):
+    cid = Category.query.get(val)
+    if not cid:
+        raise ValidationError("分类不存在")
 
 
 def api_abort(code, message=None, **kwargs):

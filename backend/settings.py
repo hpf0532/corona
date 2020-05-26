@@ -49,7 +49,7 @@ class Operations:
 class BaseConfig:
     SQLALCHEMY_TRACK_MODIFICATIONS = True
     BACK_LOCALES = ['en_US', 'zh_Hans_CN']
-    BACK_ITEM_PER_PAGE = 2
+    BACK_ITEM_PER_PAGE = 10
     MAIL_SUBJECT_PREFIX = '[Corona]'
     UPLOAD_PATH = os.path.join(basedir, 'uploads')
     secret = secrets.token_urlsafe(nbytes=15)

@@ -36,6 +36,7 @@ class User(db.Model):
 
     # 邮箱确认字段
     confirmed = db.Column(db.Boolean, default=False)
+    posts = db.relationship('Post', back_populates='author')
 
     def __init__(self, **kwargs):
         super(User, self).__init__(**kwargs)
@@ -200,12 +201,16 @@ class Post(db.Model):
     """wiki文章表"""
     id = db.Column(db.Integer, nullable=False, primary_key=True, autoincrement=True)
     title = db.Column(db.String(60), nullable=False, comment="文章标题")
+    desc = db.Column(db.String(180), comment="文章摘要")
     body = db.Column(db.Text)
     create_time = db.Column(db.DateTime, default=datetime.datetime.now, comment="创建时间")
     update_time = db.Column(db.DateTime, default=datetime.datetime.now, comment="更新时间")
     # 与分类表关联
     category_id = db.Column(db.Integer, db.ForeignKey('category.id'))
     category = db.relationship('Category', back_populates='posts')
+    # 作者
+    author_id = db.Column(db.Integer, db.ForeignKey('user.id'))
+    author = db.relationship('User', back_populates='posts')
 
 
 # 删除继承自Base的所有表
