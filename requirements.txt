@@ -4,7 +4,7 @@ aliyun-python-sdk-core-v3==2.13.11
 aliyun-python-sdk-kms==2.10.1
 aliyun-python-sdk-sts==3.0.1
 amqp==2.5.2
-ansible==2.7.10
+ansible==2.7.16
 beautifulsoup4==4.9.1
 bcrypt==3.1.7
 billiard==3.6.3.0
