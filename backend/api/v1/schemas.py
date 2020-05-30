@@ -272,12 +272,28 @@ def categorys_schema(categorys):
 
 def post_schema(post):
     return {
-        'self': url_for('api_v1.posts', post_id=post.id, _external=True),
+        'id': post.id,
+        'self': url_for('api_v1.post', post_id=post.id, _external=True),
         'kind': 'WikiPost',
         'title': post.title,
         'desc': post.desc,
         'create_time': int(post.create_time.timestamp()),
-        'author': post.author.username
+        'author': post.author.username,
+        'avatar': url_for("api_v1.get_avatar", filename=post.author.avatar_s, _external=True)
+    }
+
+
+def post_detail_schema(post):
+    return {
+        'id': post.id,
+        'self': url_for('api_v1.post', post_id=post.id, _external=True),
+        'kind': 'WikiDetail',
+        'title': post.title,
+        'create_time': int(post.create_time.timestamp()),
+        'update_time': int(post.update_time.timestamp()),
+        'body': post.body,
+        'author': post.author.username,
+        'avatar': url_for("api_v1.get_avatar", filename=post.author.avatar_s, _external=True)
     }
 
 

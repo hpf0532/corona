@@ -3,7 +3,9 @@
 # Date: 2020/5/19 上午11:31
 # File: wiki.py
 # IDE: PyCharm
+import datetime
 
+from sqlalchemy import text
 from bs4 import BeautifulSoup
 from webargs import fields
 from flask import jsonify, current_app, request, g, url_for
@@ -13,7 +15,7 @@ from webargs.flaskparser import use_args, use_kwargs
 from backend.api.v1 import api_v1
 from backend.extensions import db
 from backend.models import Category, Post
-from backend.api.v1.schemas import category_schema, categorys_schema, post_schema, posts_schema
+from backend.api.v1.schemas import category_schema, categorys_schema, post_schema, posts_schema, post_detail_schema
 from backend.decorators import auth_required
 from backend.utils.utils import api_abort, validate_category_id
 
@@ -30,8 +32,18 @@ post_args = {
     'body': fields.Str(validate=lambda p: len(p) > 0, required=True, error_messages=dict(
         required="正文必填项", validator_failed="内容不能为空", invalid="请输入字符串"
     )),
-    'category_id': fields.Int(validate=validate_category_id, missing=1, default=1)
+    'category_id': fields.Int(validate=validate_category_id, allow_none=True, missing=1, default=1)
 }
+
+
+def filter_html(content):
+    # 防止xss攻击,过滤script标签
+    soup = BeautifulSoup(content, "html.parser")
+    for tag in soup.find_all():
+        if tag.name == "script":
+            tag.decompose()
+
+    return soup
 
 
 class CategoryAPI(MethodView):
@@ -59,6 +71,13 @@ class CategoryAPI(MethodView):
     def delete(self, category_id):
         """删除分类接口"""
         category = Category.query.get_or_404(category_id)
+        # 删除分类后，将关联文章分类设置为default
+        posts = category.posts
+        print(posts)
+        if posts:
+            default = Category.query.get(1)
+            default.posts.extend(posts)
+
         db.session.delete(category)
         db.session.commit()
         return '', 204
@@ -92,8 +111,58 @@ class CategorysAPI(MethodView):
         return response
 
 
-class PostsAPI(MethodView):
+class PostAPI(MethodView):
     # decorators = [auth_required]
+
+    def get(self, post_id):
+        """
+        文章详细接口
+        :param post_id: 文章
+        :return:
+        """
+        doc = Post.query.get_or_404(post_id)
+        return jsonify(post_detail_schema(doc))
+
+    @use_args(post_args, location="json")
+    def put(self, args, post_id):
+        """
+        编辑文章接口
+        :param args: 请求数据
+        :param post_id: 文章ID
+        :return:
+        """
+        doc = Post.query.get_or_404(post_id)
+        content = args["body"]
+        soup = filter_html(content)
+        # 构建摘要数据,获取标签字符串的文本前150个符号
+        desc = soup.text[0:150] + "..."
+
+        doc.title = args["title"]
+        doc.category_id = args["category_id"]
+        doc.desc = desc
+        doc.body = str(soup)
+        doc.update_time = datetime.datetime.now()
+        # doc.author = g.user
+        doc.author_id = 20
+        try:
+            db.session.add(doc)
+            db.session.commit()
+        except Exception as e:
+            current_app.logger.error(e)
+            db.session.rollback()
+            return api_abort(400, "数据保存失败")
+        return jsonify(post_schema(doc))
+
+    def delete(self, post_id):
+        """删除文章接口"""
+        doc = Post.query.get_or_404(post_id)
+        db.session.delete(doc)
+        db.session.commit()
+        return '', 204
+
+
+class PostsAPI(MethodView):
+    decorators = [auth_required]
 
     def get(self):
         """
@@ -102,9 +171,13 @@ class PostsAPI(MethodView):
         """
         page = request.args.get('page', 1, type=int)
         limit = request.args.get('limit', type=int)
+        category_id = request.args.get('category_id', type=int)
 
         per_page = limit or current_app.config['BACK_ITEM_PER_PAGE']
-        pagination = Post.query.paginate(page, per_page)
+        pagination = Post.query.filter(
+            # 查询搜索条件
+            Post.category_id == category_id if category_id else text('')
+        ).order_by(text('-id')).paginate(page, per_page)
         items = pagination.items
         current = url_for('.options', page=page, _external=True)
         prev = None
@@ -123,21 +196,17 @@ class PostsAPI(MethodView):
         :return:
         """
         content = args["body"]
-        # 防止xss攻击,过滤script标签
-        soup = BeautifulSoup(content, "html.parser")
-        for tag in soup.find_all():
-            if tag.name == "script":
-                tag.decompose()
+        soup = filter_html(content)
         # 构建摘要数据,获取标签字符串的文本前150个符号
         desc = soup.text[0:150] + "..."
 
         doc = Post()
         doc.title = args["title"]
-        doc.category_id = args["category_id"]
+        doc.category_id = args["category_id"] or 1
         doc.desc = desc
         doc.body = str(soup)
-        # doc.author = g.user
-        doc.author_id = 20
+        doc.author = g.user
+        # doc.author_id = 20
         try:
             db.session.add(doc)
             db.session.commit()
@@ -150,7 +219,9 @@ class PostsAPI(MethodView):
         return response
 
 
+# 路由规则
 api_v1.add_url_rule('/category/<int:category_id>', view_func=CategoryAPI.as_view('category'),
                     methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/categorys', view_func=CategorysAPI.as_view('categorys'), methods=['GET', 'POST'])
+api_v1.add_url_rule('/post/<int:post_id>', view_func=PostAPI.as_view('post'), methods=['GET', 'PUT', 'DELETE'])
 api_v1.add_url_rule('/posts', view_func=PostsAPI.as_view('posts'), methods=['GET', 'POST'])

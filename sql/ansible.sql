@@ -193,6 +193,9 @@ CREATE TABLE `category` (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 
+INSERT INTO `ansible`.`category` (`id`, `name`) VALUES ('1', 'Default');
+
+
 DROP TABLE IF EXISTS `post`;
 CREATE TABLE `post` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
