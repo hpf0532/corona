@@ -247,8 +247,18 @@ class DraftAPI(MethodView):
 
 
 @api_v1.route('/delete-drafts', methods=['post'])
+@auth_required
 def batch_draft_del():
-    pass
+    draft_list = request.json
+    if not isinstance(draft_list, list):
+        return api_abort(401, "请选择草稿")
+    for item in draft_list:
+        obj = Post.query.get_or_404(item)
+        db.session.delete(obj)
+    db.session.commit()
+
+    drafts = Post.query.filter(Post.author == g.user, Post.published == False).order_by(text('-update_time')).all()
+    return jsonify(drafts_schema(drafts))
 
 
 class DraftsAPI(MethodView):
