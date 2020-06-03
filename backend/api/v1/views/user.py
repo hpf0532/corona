@@ -15,6 +15,7 @@ from backend.models import AnsibleTasks, User
 @auth_required
 def userinfo():
     return jsonify({
+        "id": g.user.id,
         "name": g.user.username,
         "avatar": url_for("api_v1.get_avatar", filename=g.user.avatar_s, _external=True)
     })

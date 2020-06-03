@@ -206,6 +206,7 @@ CREATE TABLE `post` (
   `update_time` datetime DEFAULT NULL COMMENT '更新时间',
   `category_id` int(11) DEFAULT NULL,
   `author_id` int(11) DEFAULT NULL,
+  `published` tinyint(1) NOT NULL COMMENT '文档发布状态',
   PRIMARY KEY (`id`),
   KEY `category_id` (`category_id`),
   KEY `author_id` (`author_id`),

@@ -252,12 +252,14 @@ def files_schema(files, folder_id, breadcrumb_list, bucket):
 
 
 def category_schema(category):
+    # 筛选已发布文章
+    posts = list(filter(lambda x: x.published, category.posts))
     return {
         'id': category.id,
         'kind': 'WikiCategory',
         'self': url_for('api_v1.category', category_id=category.id, _external=True),
         'name': category.name,
-        'posts': len(category.posts)
+        'posts': len(posts)
     }
 
 
@@ -278,6 +280,7 @@ def post_schema(post):
         'title': post.title,
         'desc': post.desc,
         'create_time': int(post.create_time.timestamp()),
+        'update_time': int(post.update_time.timestamp()),
         'author': post.author.username,
         'avatar': url_for("api_v1.get_avatar", filename=post.author.avatar_s, _external=True)
     }
@@ -292,6 +295,7 @@ def post_detail_schema(post):
         'create_time': int(post.create_time.timestamp()),
         'update_time': int(post.update_time.timestamp()),
         'body': post.body,
+        'category_id': post.category_id,
         'author': post.author.username,
         'avatar': url_for("api_v1.get_avatar", filename=post.author.avatar_s, _external=True)
     }
@@ -307,4 +311,13 @@ def posts_schema(items, current, prev, next, pagination):
         'last': url_for('api_v1.posts', page=pagination.pages, _external=True),
         'next': next,
         'count': pagination.total
+    }
+
+
+def drafts_schema(drafts):
+    return {
+        'self': url_for('api_v1.drafts', _external=True),
+        'kind': 'DraftsCollection',
+        'items': [post_schema(item) for item in drafts],
+        'count': len(drafts)
     }

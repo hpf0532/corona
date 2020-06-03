@@ -203,6 +203,7 @@ class Post(db.Model):
     title = db.Column(db.String(60), nullable=False, comment="文章标题")
     desc = db.Column(db.String(180), comment="文章摘要")
     body = db.Column(db.Text)
+    published = db.Column(db.Boolean, nullable=False, default=False, comment="文档发布状态")
     create_time = db.Column(db.DateTime, default=datetime.datetime.now, comment="创建时间")
     update_time = db.Column(db.DateTime, default=datetime.datetime.now, comment="更新时间")
     # 与分类表关联
