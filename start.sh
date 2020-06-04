@@ -1,7 +1,7 @@
 #!/bin/bash
 
 pkill -9 -f celery
-supervisorctl stop corona-app
+pkill -9 -f gunicorn
 
 git pull
 sleep 3
