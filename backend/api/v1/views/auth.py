@@ -23,7 +23,7 @@ from backend.utils.capcha_code import check_code
 from backend.api.v1 import api_v1
 from backend.models import User
 from backend.decorators import auth_required
-from backend.extensions import db, avatars, limiter
+from backend.extensions import db, avatars, limiter, redis_conn
 from backend.email import send_confirm_email, send_reset_password_email
 from backend.settings import POOL, Operations, basedir
 
@@ -64,8 +64,8 @@ def get_capcha():
 
     img_base64 = "data:image/png;base64," + base64.b64encode(io_obj.getvalue()).decode()
     img_id = uuid.uuid4()
-    r = redis.Redis(connection_pool=POOL)
-    r.set(str(img_id), capcha.lower(), ex=60)
+    # r = redis.Redis(connection_pool=POOL)
+    redis_conn.set(str(img_id), capcha.lower(), ex=60)
 
     # print(base64.b64decode(io_obj.getvalue()))
     # return jsonify({"data": data})
@@ -169,9 +169,9 @@ def login():
 @api_v1.route('/user/logout', methods=['POST'])
 @auth_required
 def logout():
-    r = redis.Redis(connection_pool=POOL)
+    # r = redis.Redis(connection_pool=POOL)
     # 用户注销，将token加入到黑名单中
-    r.zadd("token_blacklist", {g.token: int(datetime.datetime.now().timestamp())})
+    redis_conn.zadd("token_blacklist", {g.token: int(datetime.datetime.now().timestamp())})
     return '', 204
 
 
@@ -273,6 +273,17 @@ def reset_password(args, token):
         return jsonify({"code": 20004, "message": "密码已更新, 请登录"})
     else:
         return jsonify({"code": 50002, "message": "token认证失败"})
+
+
+@api_v1.route('/stoken', methods=['GET'])
+@auth_required
+def stoken():
+    """防止用户重复提交stoken"""
+    token = uuid.uuid4().hex
+    stoken_key = str(g.user.username) + "_stoken"
+    redis_conn.set(stoken_key, token, ex=300)
+
+    return jsonify({"stoken": token})
 
 
 @api_v1.route('/test', methods=['GET'])

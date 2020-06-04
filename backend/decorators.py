@@ -11,12 +11,12 @@ from functools import wraps
 from backend.utils.utils import api_abort
 from backend.models import User
 from backend.settings import POOL, Operations
+from backend.extensions import redis_conn
 
-conn = redis.Redis(connection_pool=POOL)
 
 # 判断元素是否在有序集合中
 def zexist(name, value):
-    index = conn.zrank(name, value)
+    index = redis_conn.zrank(name, value)
     # print(index)
     if index == 0 or index:
         return True
@@ -75,6 +75,30 @@ def confirm_required(view):
     def wrapper(*args, **kwargs):
         if not g.user.confirmed:
             return api_abort(403, "您的邮箱未认证")
+        return view(*args, **kwargs)
+
+    return wrapper
+
+
+def check_stoken(view):
+    """保证接口幂等"""
+
+    @wraps(view)
+    def wrapper(*args, **kwargs):
+        stoken = request.args.get("stoken")
+        if not stoken:
+            return api_abort(403, "stoken缺失")
+
+        stoken_key = str(g.user.username) + "_stoken"
+        save_token = redis_conn.get(stoken_key)
+        # print(save_token.decode(), stoken)
+        if not save_token:
+            return api_abort(403, "请勿重复操作")
+        if stoken != save_token.decode():
+            return api_abort(403, "stoken校验失败")
+
+        redis_conn.delete(stoken_key)
+
         return view(*args, **kwargs)
 
     return wrapper

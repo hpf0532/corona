@@ -16,7 +16,7 @@ from werkzeug.http import HTTP_STATUS_CODES
 from webargs import ValidationError
 from backend.models import HostGroup, PlayBook, Environment, Category
 from backend.settings import playbook_dir, Operations, POOL
-from backend.extensions import db
+from backend.extensions import db, redis_conn
 
 def isAlnum(word):
     """
@@ -151,8 +151,8 @@ def get_random_color():
 
 def validate_capcha(cap_id, user_cap):
     """验证用户输入的验证码"""
-    r = redis.Redis(connection_pool=POOL)
-    capcha = r.get(cap_id)
+    capcha = redis_conn.get(cap_id)
+    print(capcha.decode())
     if not capcha: return False
     if user_cap.lower() == capcha.decode():
         return True

@@ -17,7 +17,7 @@ from backend.extensions import db
 from backend.models import Category, Post
 from backend.api.v1.schemas import category_schema, categorys_schema, post_schema, posts_schema, post_detail_schema, \
     drafts_schema
-from backend.decorators import auth_required
+from backend.decorators import auth_required, check_stoken
 from backend.utils.utils import api_abort, validate_category_id
 
 category_args = {
@@ -180,6 +180,7 @@ class PostsAPI(MethodView):
         limit = request.args.get('limit', type=int)
         category_id = request.args.get('category_id', type=int)
         author_id = request.args.get('author_id', type=int)
+        title = request.args.get('title')
         # 发布状态
         published = request.args.get('published', True)
 
@@ -188,7 +189,8 @@ class PostsAPI(MethodView):
             # 查询搜索条件
             Post.published == published,
             Post.category_id == category_id if category_id else text(''),
-            Post.author_id == author_id if author_id else text('')
+            Post.author_id == author_id if author_id else text(''),
+            Post.title.like("%" + title + "%") if title else text(''),
         ).order_by(text('-update_time')).paginate(page, per_page)
         items = pagination.items
         current = url_for('.options', page=page, _external=True)
@@ -201,6 +203,7 @@ class PostsAPI(MethodView):
         return jsonify(posts_schema(items, current, prev, next, pagination))
 
     @use_args(post_args, location="json")
+    @check_stoken
     def post(self, args):
         """
         新建文章
