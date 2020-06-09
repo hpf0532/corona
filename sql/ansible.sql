@@ -49,7 +49,7 @@ CREATE TABLE `ansibletask` (
   UNIQUE KEY `celery_id` (`celery_id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `ansibletask_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
-  CONSTRAINT `ansibletask_ibfk_2` FOREIGN KEY (`option_id`) REFERENCES `options` (`id`)
+  CONSTRAINT `ansibletask_ibfk_2` FOREIGN KEY (`option_id`) REFERENCES `options` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;
 
 -- ----------------------------
