@@ -127,6 +127,7 @@ CREATE TABLE `playbook` (
   `author` varchar(20) NOT NULL,
   `information` varchar(48) NOT NULL,
   `is_env` tinyint(1) NOT NULL,
+  `upload` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `information` (`information`)
