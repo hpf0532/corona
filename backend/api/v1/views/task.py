@@ -235,6 +235,8 @@ class UploadDistAPI(MethodView):
         data = {"code": 2000, "msg": ''}
         try:
             project = request.args.get('option')
+            print(project)
+            current_app.logger.info(project)
             file_obj = request.files["files"]
             if not project:
                 return api_abort(403, "请先选择参数")
@@ -248,6 +250,8 @@ class UploadDistAPI(MethodView):
 
             file_obj.save(os.path.join(upload_path, "dist.zip"))
         except Exception as e:
+            print(e)
+            current_app.logger.error(e)
             data["code"] = 5001
             data["msg"] = "文件上传失败"
 
