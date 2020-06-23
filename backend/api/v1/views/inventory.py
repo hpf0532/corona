@@ -47,7 +47,9 @@ playbooks_args = {
     )),
     'author': fields.Str(validate=lambda p: len(p) > 0, required=True),
     'information': fields.Str(validate=lambda p: len(p) > 0, required=True),
-    'is_env': fields.Boolean(missing=False)
+    'is_env': fields.Boolean(missing=False),
+    'upload': fields.Boolean(missing=False)
+
 }
 
 
@@ -208,6 +210,7 @@ class PlaybookAPI(MethodView):
         playbook.author = args['author']
         playbook.information = args['information']
         playbook.is_env = args['is_env']
+        playbook.upload = args['upload']
         playbook.detail.content = yml
 
         try:
@@ -243,7 +246,7 @@ class PlaybooksAPI(MethodView):
         with open(playbook_file, encoding='utf8') as f:
             yml = f.read()
         playbook = PlayBook(name=args['name'], author=args['author'], information=args['information'],
-                            is_env=args['is_env'])
+                            is_env=args['is_env'], upload=args['upload'])
         try:
             db.session.add(playbook)
             db.session.commit()
