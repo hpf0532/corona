@@ -1,0 +1,36 @@
+#- hosts: all
+- hosts: 127.0.0.1
+
+  remote_user: root
+  tasks:
+    - name: register time
+      shell: echo "$(date +"%Y%m%d%H%M")"
+      register: time
+    - name: scp dist package
+      shell: 'scp -P "{{ remote_port }}" -r dist.zip "{{ remote_host }}":"{{ remote_dir }}"'
+      args:
+        chdir: '{{ workdir }}/{{ project }}'
+        executable: /bin/bash
+
+    - name: unzip dist package
+      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; unzip dist.zip &>/dev/null"'
+      args:
+        executable: /bin/bash
+    - name: rename dist dir
+      shell:  'ssh -p "{{ remote_port }}" "{{ remote_host }}" "mv "{{ remote_dir }}"/dist "{{ remote_dir }}"/"{{ project }}"_"{{ time.stdout }}""'
+      args:
+        executable: /bin/bash
+
+    - name: delete soft link file
+      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "rm -f "{{ remote_dir }}"/"{{ project }}""'
+      args:
+        executable: /bin/bash
+    - name: create new soft link file
+      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; ln -sv "{{ project }}"_"{{ time.stdout }}" "{{ project }}""'
+    - name: roll the dir
+      shell:  ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; find . -regex './"{{ project }}"_[0-9]*$' -type d | sort -rn | sed -n '6,\$p' | xargs rm -rf "
+      #      shell:  'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd /mnt/wwwroot/"{{ project }}"; find . -regex "./dist_[0-9]\*$" "'
+      args:
+        executable: /bin/bash
+    - name: delete dist zip file
+      file: path={{ workdir }}/{{ project }}/dist.zip state=absent

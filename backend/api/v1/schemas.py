@@ -75,7 +75,8 @@ def playbook_schema(playbook):
         'name': playbook.name,
         'author': playbook.author,
         'information': playbook.information,
-        'is_env': playbook.is_env
+        'is_env': playbook.is_env,
+        'upload': playbook.upload
     }
 
 

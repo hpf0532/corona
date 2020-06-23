@@ -3,7 +3,7 @@
 # Date: 2020/3/10 下午4:01
 # File: task.py
 # IDE: PyCharm
-import json
+import json, os
 from datetime import datetime
 from sqlalchemy import text
 from webargs import fields
@@ -227,6 +227,33 @@ class EnvsAPI(MethodView):
         return jsonify(envs_schema(envs))
 
 
+class UploadDistAPI(MethodView):
+    decorators = [auth_required]
+
+    def post(self):
+        """上传dist压缩文件接口"""
+        data = {"code": 2000, "msg": ''}
+        try:
+            project = request.args.get('option')
+            file_obj = request.files["files"]
+            if not project:
+                return api_abort(403, "请先选择参数")
+            if not file_obj or file_obj.filename.split(".")[-1] != "zip":
+                return api_abort(403, "请上传zip文件")
+
+            upload_path = os.path.join(current_app.config["UPLOAD_PATH"], project)
+            # 如果目录不存在，则创建
+            if not os.path.exists(upload_path):
+                os.mkdir(upload_path)
+
+            file_obj.save(os.path.join(upload_path, "dist.zip"))
+        except Exception as e:
+            data["code"] = 5001
+            data["msg"] = "文件上传失败"
+
+        return jsonify(data)
+
+
 # 添加路由
 api_v1.add_url_rule('/envs', view_func=EnvsAPI.as_view('envs'), methods=['GET'])
 api_v1.add_url_rule('/options', view_func=PlayBookOptionsAPI.as_view('options'), methods=['GET', 'POST'])
@@ -236,3 +263,4 @@ api_v1.add_url_rule('/tasks', view_func=TasksAPI.as_view('tasks'), methods=['GET
 api_v1.add_url_rule('/tasks/<int:task_id>', view_func=TaskAPI.as_view('task'), methods=['GET'])
 api_v1.add_url_rule('/flush_task/<int:task_id>', view_func=FlushTaskAPI.as_view('flush_task'), methods=['GET'])
 api_v1.add_url_rule('/task_options', view_func=TaskOptionsAPI.as_view('task_options'), methods=['GET'])
+api_v1.add_url_rule('/upload_dist', view_func=UploadDistAPI.as_view('upload_dist'), methods=['POST'])
