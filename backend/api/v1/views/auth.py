@@ -281,7 +281,7 @@ def stoken():
     """防止用户重复提交stoken"""
     token = uuid.uuid4().hex
     stoken_key = str(g.user.username) + "_stoken"
-    redis_conn.set(stoken_key, token, ex=300)
+    redis_conn.set(stoken_key, token, ex=86400)
 
     return jsonify({"stoken": token})
 
