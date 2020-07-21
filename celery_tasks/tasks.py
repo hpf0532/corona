@@ -9,6 +9,7 @@ if os.getenv("PYTHONOPTIMIZE", ""):
 else:
     print("\33[31m环境变量问题，Celery Client启动后无法正常执行Ansible任务，\n请设置export PYTHONOPTIMIZE=1；\n\33[32m程序退出\33[0m")
     sys.exit()
+import re
 import redis
 import requests
 import json
@@ -44,9 +45,17 @@ def save_to_db(tid):
         at = query.filter(AnsibleTasks.celery_id == tid).one()
 
     at.ansible_result = json.dumps([json.loads(i.decode()) for i in rlist])
+    # 判断ansible是否失败
+    fail_patten = re.compile(r'"status": "failed"')
+    ret = fail_patten.search(at.ansible_result)
+    if ret:
+        # ansible执行失败
+        at.state = 2
+    else:
+        # ansible任务执行成功
+        at.state = 1
     ct = a.get('celery-task-meta-%s' % at.celery_id).decode()
     at.celery_result = ct
-    at.state = True
     try:
         db.session.add(at)
         db.session.commit()
@@ -85,7 +94,8 @@ def sync_ansible_result(self, ret, *a, **kw):  # 执行结束，结果保持至d
                 "playbook": task_obj.playbook,
                 "create_time": task_obj.create_time,
                 "ansible_id": task_obj.ansible_id,
-                "validate_url": task_obj.option.url if task_obj.option else ""
+                "validate_url": task_obj.option.url if task_obj.option else "",
+                "status": task_obj.status.code
             }
             send_dingding_msg.apply_async((data_dict,))
         else:
@@ -142,7 +152,7 @@ def send_dingding_msg(self, task_obj=None):
     """
     headers = {'Content-Type': 'application/json;charset=utf-8'}
     if task_obj:
-        msg = " 任务{playbook}发布完成\n 项目名称: {option}\n 发布人员: {user}\n 任务提交时间: {create_time}\n 任务ID: {ansible_id}\n 项目链接: {validate_url}\n ".format(
+        msg = "　{status} \n任务{playbook}发布完成\n 项目名称: {option}\n 发布人员: {user}\n 任务提交时间: {create_time}\n 任务ID: {ansible_id}\n 项目链接: {validate_url}\n ".format(
             **task_obj)
     else:
         msg = " 任务发布失败， 请登录系统查看，或联系管理员"

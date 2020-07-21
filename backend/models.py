@@ -150,7 +150,13 @@ class AnsibleTasks(db.Model):
     option_id = db.Column(db.Integer, db.ForeignKey('options.id', ondelete='SET NULL'), nullable=True)
 
     # True: 任务执行完成 False: 任务执行中
-    state = db.Column(db.Boolean, default=False, nullable=False)
+    status_choices = (
+        (0, '执行中'),
+        (1, '已完成'),
+        (2, '任务失败')
+    )
+    state = db.Column(ChoiceType(status_choices, db.Integer()), nullable=False, default=0, comment="任务状态")
+    # state = db.Column(db.Boolean, default=False, nullable=False)
     ansible_result = db.Column(db.Text(16777216))
     celery_result = db.Column(db.Text)
     create_time = db.Column(db.DateTime, default=datetime.datetime.now)

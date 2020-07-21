@@ -126,7 +126,7 @@ def task_detail_schema(task):
         'ansible_result': json.loads(task.ansible_result) if task.ansible_result else None,
         'celery_result': json.loads(task.celery_result) if task.celery_result else None,
         'playbook': task.playbook,
-        'state': task.state,
+        'state': task.state.code,
         'create_time': int(task.create_time.timestamp())
     }
 
