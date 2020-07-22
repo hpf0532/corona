@@ -1,7 +1,7 @@
 import json
 import datetime
 import random, string
-from flask import g
+from flask import g, current_app
 from backend.models import AnsibleTasks
 from celery_tasks.tasks import sync_ansible_result, ansible_playbook_exec, ansible_exec, error_handler
 from backend.extensions import db
@@ -20,23 +20,28 @@ class AnsibleOpt:
             link_error=error_handler.s()
         )  # 保存 ansible 结果
         # print(tid, celery_task.task_id, extra_vars, playbook, "===========")
-        at = AnsibleTasks(
-            ansible_id=tid,
-            celery_id=celery_task.task_id,
-            user=g.user,
-            extra_vars=json.dumps(extra_vars),
-            playbook=playbook,
-            option_id=option
-        )
-        db.session.add(at)
-        db.session.commit()
-        return {
-            "playbook": playbook,
-            "extra_vars": extra_vars,
-            "ansible_id": tid,
-            "celery_task": celery_task.task_id,
-            "pk": at.id
-        }
+        try:
+            at = AnsibleTasks(
+                ansible_id=tid,
+                celery_id=celery_task.task_id,
+                user=g.user,
+                extra_vars=json.dumps(extra_vars),
+                playbook=playbook,
+                option_id=option,
+            )
+            at.state = 1
+            db.session.add(at)
+            db.session.commit()
+            return {
+                "playbook": playbook,
+                "extra_vars": extra_vars,
+                "ansible_id": tid,
+                "celery_task": celery_task.task_id,
+                "pk": at.id
+            }
+        except Exception as e:
+            print(e)
+            db.session.rollback()
 
     @staticmethod
     def ansible_opt():
@@ -46,6 +51,3 @@ class AnsibleOpt:
         return {'tid': tid,
                 'celery_task': celery_task.task_id,
                 }
-
-
-

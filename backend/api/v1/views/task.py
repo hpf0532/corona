@@ -176,8 +176,6 @@ class TasksAPI(MethodView):
         if pagination.has_next:
             next = url_for('.tasks', page=page + 1, _external=True)
 
-        print(tasks_schema(items, current, prev, next, pagination))
-
         return jsonify(tasks_schema(items, current, prev, next, pagination))
 
     @confirm_required

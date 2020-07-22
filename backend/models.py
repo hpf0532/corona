@@ -151,9 +151,9 @@ class AnsibleTasks(db.Model):
 
     # True: 任务执行完成 False: 任务执行中
     status_choices = (
-        (0, '执行中'),
-        (1, '已完成'),
-        (2, '任务失败')
+        (1, '执行中'),
+        (2, '已完成'),
+        (3, '任务失败')
     )
     state = db.Column(ChoiceType(status_choices, db.Integer()), nullable=False, default=0, comment="任务状态")
     # state = db.Column(db.Boolean, default=False, nullable=False)

@@ -30,6 +30,7 @@ from backend.models import AnsibleTasks
 from backend.extensions import db
 from backend.settings import BaseConfig, POOL
 from celery_tasks import celery, MyTask
+from backend.utils.validate_task import task_verify
 
 sources = inventory
 
@@ -46,14 +47,13 @@ def save_to_db(tid):
 
     at.ansible_result = json.dumps([json.loads(i.decode()) for i in rlist])
     # 判断ansible是否失败
-    fail_patten = re.compile(r'"status": "failed"')
-    ret = fail_patten.search(at.ansible_result)
+    ret = task_verify(at.ansible_result)
     if ret:
-        # ansible执行失败
+        # ansible任务执行成功
         at.state = 2
     else:
-        # ansible任务执行成功
-        at.state = 1
+        # ansible执行失败
+        at.state = 3
     ct = a.get('celery-task-meta-%s' % at.celery_id).decode()
     at.celery_result = ct
     try:
@@ -95,7 +95,7 @@ def sync_ansible_result(self, ret, *a, **kw):  # 执行结束，结果保持至d
                 "create_time": task_obj.create_time,
                 "ansible_id": task_obj.ansible_id,
                 "validate_url": task_obj.option.url if task_obj.option else "",
-                "status": task_obj.status.code
+                "status": task_obj.state.value
             }
             send_dingding_msg.apply_async((data_dict,))
         else:
@@ -152,7 +152,7 @@ def send_dingding_msg(self, task_obj=None):
     """
     headers = {'Content-Type': 'application/json;charset=utf-8'}
     if task_obj:
-        msg = "　{status} \n任务{playbook}发布完成\n 项目名称: {option}\n 发布人员: {user}\n 任务提交时间: {create_time}\n 任务ID: {ansible_id}\n 项目链接: {validate_url}\n ".format(
+        msg = " 任务{playbook}发布完成\n\n ×任务状态: {status} \n\n 项目名称: {option}\n 发布人员: {user}\n 任务提交时间: {create_time}\n 任务ID: {ansible_id}\n 项目链接: {validate_url}\n ".format(
             **task_obj)
     else:
         msg = " 任务发布失败， 请登录系统查看，或联系管理员"

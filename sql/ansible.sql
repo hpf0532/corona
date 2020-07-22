@@ -41,13 +41,14 @@ CREATE TABLE `ansibletask` (
   `ansible_result` longtext,
   `celery_result` text,
   `create_time` datetime DEFAULT NULL,
-  `state` tinyint(1) NOT NULL,
+  `state` int(11) NOT NULL COMMENT '任务状态',
   `user_id` int(11) DEFAULT NULL,
   `option_id` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ansible_id` (`ansible_id`),
   UNIQUE KEY `celery_id` (`celery_id`),
   KEY `user_id` (`user_id`),
+  KEY `option_id` (`option_id`),
   CONSTRAINT `ansibletask_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `user` (`id`),
   CONSTRAINT `ansibletask_ibfk_2` FOREIGN KEY (`option_id`) REFERENCES `options` (`id`) ON DELETE SET NULL
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8mb4;

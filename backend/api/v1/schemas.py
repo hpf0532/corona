@@ -109,7 +109,10 @@ def task_schema(task):
         'playbook': task.playbook,
         'user': task.user.username if task.user else None,
         'option': task.option.name if task.option else None,
-        'state': task.state,
+        'state': {
+            'state_code': task.state.code,
+            'state_text': task.state.value
+        },
         'create_time': int(task.create_time.timestamp())
     }
 
@@ -126,7 +129,7 @@ def task_detail_schema(task):
         'ansible_result': json.loads(task.ansible_result) if task.ansible_result else None,
         'celery_result': json.loads(task.celery_result) if task.celery_result else None,
         'playbook': task.playbook,
-        'state': task.state.code,
+        'state': task.state.value,
         'create_time': int(task.create_time.timestamp())
     }
 
