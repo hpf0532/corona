@@ -20,12 +20,13 @@ def check_code(width=180, height=40, char_length=4, font_file='backend/static/fo
         """
         tmp_list = []
         for i in range(4):
-            u = chr(random.randint(65, 90))  # 大写字母
-            l = chr(random.randint(97, 122))  # 小写字母
+            # u = chr(random.randint(65, 90))  # 大写字母
+            # l = chr(random.randint(97, 122))  # 小写字母
             n = str(random.randint(0, 9))  # 数字
 
-            tmp = random.choice([u, l, n])
-            tmp_list.append(tmp)
+            # tmp = random.choice([u, l, n])
+            # tmp_list.append(tmp)
+            tmp_list.append(n)
 
         return random.choice(tmp_list)
 
