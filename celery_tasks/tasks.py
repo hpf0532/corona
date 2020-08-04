@@ -14,6 +14,7 @@ import redis
 import requests
 import json
 from flask import current_app, render_template
+from dateutil.parser import parse
 from flask_mail import Message
 from backend.settings import REDIS_ADDR, REDIS_PD, REDIS_PORT, ansible_result_redis_db, result_db, inventory, \
     DINGDING_URL, DINGDING_CONTACTS
@@ -150,10 +151,14 @@ def send_dingding_msg(self, task_obj=None):
     :param task_obj:
     :return:
     """
+    current_time = datetime.datetime.now()
     headers = {'Content-Type': 'application/json;charset=utf-8'}
+    # task_obj.current_time = datetime.datetime.now()
     if task_obj:
-        msg = " 任务{playbook}发布完成\n\n *任务状态: {status} \n\n 项目名称: {option}\n 发布人员: {user}\n 任务提交时间: {create_time}\n 任务ID: {ansible_id}\n 项目链接: {validate_url}\n ".format(
-            **task_obj)
+        # celery_logger.info(task_obj, "dddddddddddddddddddddd")
+        used_time = int(current_time.timestamp()) - int(parse(task_obj.get("create_time")).timestamp())
+        msg = " 任务{playbook}发布完成\n\n *任务状态: {status} \n\n 项目名称: {option}\n 发布人员: {user}\n 任务提交时间: {create_time}\n 任务耗时: {0} 秒\n 任务ID: {ansible_id}\n 项目链接: {validate_url}\n ".format(
+            used_time, **task_obj)
     else:
         msg = " 任务发布失败， 请登录系统查看，或联系管理员"
     json_text = {
