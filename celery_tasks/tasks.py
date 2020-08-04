@@ -152,7 +152,7 @@ def send_dingding_msg(self, task_obj=None):
     """
     headers = {'Content-Type': 'application/json;charset=utf-8'}
     if task_obj:
-        msg = " 任务{playbook}发布完成\n\n ×任务状态: {status} \n\n 项目名称: {option}\n 发布人员: {user}\n 任务提交时间: {create_time}\n 任务ID: {ansible_id}\n 项目链接: {validate_url}\n ".format(
+        msg = " 任务{playbook}发布完成\n\n *任务状态: {status} \n\n 项目名称: {option}\n 发布人员: {user}\n 任务提交时间: {create_time}\n 任务ID: {ansible_id}\n 项目链接: {validate_url}\n ".format(
             **task_obj)
     else:
         msg = " 任务发布失败， 请登录系统查看，或联系管理员"
