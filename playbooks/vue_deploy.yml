@@ -62,7 +62,7 @@
       args:
         executable: /bin/bash
     - name: unzip dist package
-      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd /mnt/wwwroot/"{{ project }}"; tar -xvf "{{ project }}".tar.gz"'
+      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd /mnt/wwwroot/"{{ project }}"; tar -xf "{{ project }}".tar.gz"'
       args:
         executable: /bin/bash
     - name: change owner for dist dir
