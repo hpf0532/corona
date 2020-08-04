@@ -27,6 +27,7 @@
       args:
         executable: /bin/bash
     - name: npm install
+      no_log: True
       shell: "{{ npm_cmd }}"
       args:
         chdir: '{{ workdir }}/{{ project }}'
@@ -34,6 +35,7 @@
     #        name: npm-script
     #        path: '{{ workdir }}/{{ project }}'
     - name: npm run build
+      no_log: True
       shell: "{{ build_cmd }}"
       args:
         chdir: '{{ workdir }}/{{ project }}'
