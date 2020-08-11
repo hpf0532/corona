@@ -14,7 +14,7 @@ from backend.api.v1 import api_v1
 from backend.extensions import db
 from backend.models import Host, PlayBook, AnsibleTasks, Options, Environment
 from backend.utils.utils import api_abort, validate_env_id, validate_playbook_id, validate_json
-from backend.decorators import auth_required, confirm_required
+from backend.decorators import auth_required, confirm_required, check_stoken
 from backend.api.v1.schemas import tasks_schema, task_detail_schema, flush_task_schema, option_schema, options_schema, \
     envs_schema, task_options_schema
 from ansible_index import AnsibleOpt
@@ -178,6 +178,7 @@ class TasksAPI(MethodView):
 
         return jsonify(tasks_schema(items, current, prev, next, pagination))
 
+    @check_stoken
     @confirm_required
     def post(self):
         """提交任务接口"""
