@@ -10,6 +10,7 @@ from webargs import fields
 from webargs.flaskparser import use_args
 from flask import request, jsonify, current_app, url_for
 from flask.views import MethodView
+from celery_tasks.tasks import terminate_task
 from backend.api.v1 import api_v1
 from backend.extensions import db
 from backend.models import Host, PlayBook, AnsibleTasks, Options, Environment
@@ -219,6 +220,32 @@ class FlushTaskAPI(MethodView):
         return jsonify(flush_task_schema(task))
 
 
+class StopTaskAPI(MethodView):
+    """停止任务"""
+
+    def post(self):
+        try:
+            task_id = request.json.get("task_id")
+            if not task_id:
+                return api_abort(400, "任务id不能为空")
+
+            from manage import celery as celery_app
+            celery_app.control.revoke(task_id, terminate=True)
+
+            # 更改数据库任务状态，延迟10秒执行
+            celery_task = terminate_task.apply_async(
+                (task_id,), countdown=10
+            )
+            return jsonify({
+                "code": 200,
+                "msg": "任务终止成功",
+                # "res": res
+            })
+        except Exception as e:
+            print(e)
+            return api_abort(403, "任务删除失败")
+
+
 class EnvsAPI(MethodView):
     decorators = [auth_required]
 
@@ -266,3 +293,4 @@ api_v1.add_url_rule('/tasks/<int:task_id>', view_func=TaskAPI.as_view('task'), m
 api_v1.add_url_rule('/flush_task/<int:task_id>', view_func=FlushTaskAPI.as_view('flush_task'), methods=['GET'])
 api_v1.add_url_rule('/task_options', view_func=TaskOptionsAPI.as_view('task_options'), methods=['GET'])
 api_v1.add_url_rule('/upload_dist', view_func=UploadDistAPI.as_view('upload_dist'), methods=['POST'])
+api_v1.add_url_rule('/stop_task', view_func=StopTaskAPI.as_view('stop_task'), methods=['POST'])

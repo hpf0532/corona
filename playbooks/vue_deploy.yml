@@ -57,8 +57,13 @@
       args:
         chdir: '{{ workdir }}/{{ project }}'
         executable: /bin/bash
+    - name: judge dist dir is exists
+      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "test -d /mnt/wwwroot/"{{ project }}"/dist"'
+      ignore_errors: true
+      register: is_dist
     - name: rename origin dir
-      shell:  'ssh -p "{{ remote_port }}" "{{ remote_host }}" "mv /mnt/wwwroot/"{{ project }}"/dist /mnt/wwwroot/"{{ project }}"/dist_$(date +"%Y%m%d%H%M")"'
+      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "mv /mnt/wwwroot/"{{ project }}"/dist /mnt/wwwroot/"{{ project }}"/dist_$(date +"%Y%m%d%H%M")"'
+      when: is_dist.rc == 0
       args:
         executable: /bin/bash
     - name: unzip dist package

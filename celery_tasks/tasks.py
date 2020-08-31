@@ -122,6 +122,27 @@ def ansible_playbook_exec(self, tid, hosts, playbook, extra_vars={}):
     return 'success'
 
 
+# 停止正在运行的任务
+@celery.task(bind=True, base=MyTask)
+def terminate_task(self, cid):
+    # celery.control.revoke(cid, terminate=True)
+    task_status = celery.AsyncResult(cid).state
+    if task_status == "REVOKED":
+        try:
+            task_obj = AnsibleTasks.query.filter(AnsibleTasks.celery_id == cid).first()
+            if task_obj:
+                task_obj.state = 4
+                task_obj.ansible_result = json.dumps({"status": "任务取消"})
+                task_obj.celery_result = json.dumps({"status": "任务取消"})
+                db.session.add(task_obj)
+                db.session.commit()
+        except Exception as e:
+            db.session.rollback()
+            celery_logger.error("保存ansible数据失败, 失败原因: {}".format(e))
+
+    return 'success'
+
+
 # 删除过期token定时任务
 @celery.task(bind=True, base=MyTask)
 def flush_token(self):
