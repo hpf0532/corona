@@ -130,7 +130,9 @@ def task_detail_schema(task):
         'celery_result': json.loads(task.celery_result) if task.celery_result else None,
         'playbook': task.playbook,
         'state': task.state.value,
-        'create_time': int(task.create_time.timestamp())
+        'create_time': int(task.create_time.timestamp()),
+        'cancelled': task.cancelled
+
     }
 
 

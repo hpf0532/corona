@@ -55,8 +55,12 @@ def save_to_db(tid):
     else:
         # ansible执行失败
         at.state = 3
-    ct = a.get('celery-task-meta-%s' % at.celery_id).decode()
-    at.celery_result = ct
+
+    celery_result = a.get('celery-task-meta-%s' % at.celery_id)
+    if celery_result:
+        ct = celery_result.decode()
+        at.celery_result = ct
+    at.cancelled = True
     try:
         db.session.add(at)
         db.session.commit()
@@ -127,6 +131,7 @@ def ansible_playbook_exec(self, tid, hosts, playbook, extra_vars={}):
 def terminate_task(self, cid):
     # celery.control.revoke(cid, terminate=True)
     task_status = celery.AsyncResult(cid).state
+    celery_logger.info(task_status)
     if task_status == "REVOKED":
         try:
             task_obj = AnsibleTasks.query.filter(AnsibleTasks.celery_id == cid).first()

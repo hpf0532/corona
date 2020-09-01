@@ -231,18 +231,23 @@ class StopTaskAPI(MethodView):
 
             from manage import celery as celery_app
             celery_app.control.revoke(task_id, terminate=True)
+            task_obj = AnsibleTasks.query.filter(AnsibleTasks.celery_id == task_id).first()
+            if task_obj:
+                task_obj.cancelled = True
+                db.session.add(task_obj)
+                db.session.commit()
 
             # 更改数据库任务状态，延迟10秒执行
             celery_task = terminate_task.apply_async(
-                (task_id,), countdown=10
+                (task_id,), countdown=6
             )
             return jsonify({
                 "code": 200,
                 "msg": "任务终止成功",
-                # "res": res
+                "cancelled": True
             })
         except Exception as e:
-            print(e)
+            current_app.logger.error(e)
             return api_abort(403, "任务删除失败")
 
 

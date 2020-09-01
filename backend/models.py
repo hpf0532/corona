@@ -161,6 +161,7 @@ class AnsibleTasks(db.Model):
     ansible_result = db.Column(db.Text(16777216))
     celery_result = db.Column(db.Text)
     create_time = db.Column(db.DateTime, default=datetime.datetime.now)
+    cancelled = db.Column(db.Boolean, nullable=False, default=False)
 
     user = db.relationship('User')
     option = db.relationship('Options')
