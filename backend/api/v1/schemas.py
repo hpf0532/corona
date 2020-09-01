@@ -163,6 +163,7 @@ def flush_task_schema(task):
     return {
         'ansible_result': json.loads(task.ansible_result) if task.ansible_result else None,
         'celery_result': json.loads(task.celery_result) if task.celery_result else None,
+        'cancelled': task.cancelled
     }
 
 
