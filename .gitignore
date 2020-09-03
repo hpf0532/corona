@@ -133,3 +133,5 @@ uploads/*
 !uploads/avatars
 uploads/avatars/*
 !uploads/avatars/.gitkeep
+ssh_keys/*
+!ssh_keys/.gitkeep
