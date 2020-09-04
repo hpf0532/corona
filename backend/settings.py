@@ -85,6 +85,7 @@ class BaseConfig:
     OSS_ENDPOINT = 'http://oss-cn-qingdao.aliyuncs.com'
     STS_REGION = 'cn-beijing'
     OSS_REGION = 'oss-cn-qingdao'
+    TEST_SSH_HOST = os.getenv("TEST_SSH_HOST")
 
 class MySQLConfig:
     MYSQL_USERNAME = os.getenv('MYSQL_USER')

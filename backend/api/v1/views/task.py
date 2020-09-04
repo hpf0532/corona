@@ -4,12 +4,17 @@
 # File: task.py
 # IDE: PyCharm
 import json, os
+import time
 from datetime import datetime
+from socket import timeout
+import paramiko
 from sqlalchemy import text
 from webargs import fields
 from webargs.flaskparser import use_args
 from flask import request, jsonify, current_app, url_for
 from flask.views import MethodView
+
+from backend.settings import basedir
 from celery_tasks.tasks import terminate_task
 from backend.api.v1 import api_v1
 from backend.extensions import db
@@ -222,6 +227,7 @@ class FlushTaskAPI(MethodView):
 
 class StopTaskAPI(MethodView):
     """停止任务"""
+    decorators = [auth_required]
 
     def post(self):
         try:
@@ -249,6 +255,49 @@ class StopTaskAPI(MethodView):
         except Exception as e:
             current_app.logger.error(e)
             return api_abort(403, "任务删除失败")
+
+
+class TestSSHAPI(MethodView):
+    """检测ssh连接接口"""
+
+    def get(self):
+        res = {"status": False, "msg": ""}
+        key = paramiko.RSAKey.from_private_key_file(os.path.join(basedir, 'ssh_keys/id_rsa'))
+        time1 = time.time()
+        # success = 0
+        # fail = 0
+
+        # for x in range(10):
+
+        try:
+            with paramiko.SSHClient() as ssh:
+                # 自动添加主机名及密钥到本地并保存
+                ssh.set_missing_host_key_policy(paramiko.AutoAddPolicy())
+                ssh.connect(current_app.config['TEST_SSH_HOST'], username="root", pkey=key, timeout=10)
+                res["status"] = True
+                res["msg"] = "测试连接 {} 成功".format(current_app.config['TEST_SSH_HOST'])
+            # success += 1
+        except timeout as e:
+            res["msg"] = "测试连接 {} 超时".format(current_app.config['TEST_SSH_HOST'])
+        except Exception as e:
+            current_app.logger.error(e)
+            res["msg"] = "测试连接 {} 失败".format(current_app.config['TEST_SSH_HOST'])
+
+        time2 = time.time()
+        total_time = round(float(time2) - float(time1), 2)
+
+        res["time"] = total_time
+
+        return jsonify(res)
+
+        # l测试耗时(s)
+
+        # return jsonify({
+        #     "count": 10,
+        #     "success_percentage": str(int((success / 10) * 100))+"%" ,
+        #     "fail_percentage": str(int((fail / 10) * 100)) + "%",
+        #     "res": total_time
+        # })
 
 
 class EnvsAPI(MethodView):
@@ -299,3 +348,4 @@ api_v1.add_url_rule('/flush_task/<int:task_id>', view_func=FlushTaskAPI.as_view(
 api_v1.add_url_rule('/task_options', view_func=TaskOptionsAPI.as_view('task_options'), methods=['GET'])
 api_v1.add_url_rule('/upload_dist', view_func=UploadDistAPI.as_view('upload_dist'), methods=['POST'])
 api_v1.add_url_rule('/stop_task', view_func=StopTaskAPI.as_view('stop_task'), methods=['POST'])
+api_v1.add_url_rule('/test_ssh', view_func=TestSSHAPI.as_view('test_ssh'), methods=['GET'])
