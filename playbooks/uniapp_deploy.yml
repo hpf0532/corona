@@ -11,26 +11,50 @@
       args:
         chdir: '{{ workdir }}/{{ project }}'
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
 
     - name: unzip dist package
       shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; unzip dist.zip &>/dev/null"'
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
     - name: rename dist dir
-      shell:  'ssh -p "{{ remote_port }}" "{{ remote_host }}" "mv "{{ remote_dir }}"/dist "{{ remote_dir }}"/"{{ project }}"_"{{ time.stdout }}""'
+      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "mv "{{ remote_dir }}"/dist "{{ remote_dir }}"/"{{ project }}"_"{{ time.stdout }}""'
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
 
     - name: delete soft link file
       shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "rm -f "{{ remote_dir }}"/"{{ project }}""'
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
     - name: create new soft link file
       shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; ln -sv "{{ project }}"_"{{ time.stdout }}" "{{ project }}""'
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
     - name: roll the dir
-      shell:  ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; find . -regex './"{{ project }}"_[0-9]*$' -type d | sort -rn | sed -n '6,\$p' | xargs rm -rf "
+      shell: ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; find . -regex './"{{ project }}"_[0-9]*$' -type d | sort -rn | sed -n '6,\$p' | xargs rm -rf "
       #      shell:  'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd /mnt/wwwroot/"{{ project }}"; find . -regex "./dist_[0-9]\*$" "'
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
     - name: delete dist zip file
       file: path={{ workdir }}/{{ project }}/dist.zip state=absent
