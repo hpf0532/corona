@@ -19,6 +19,10 @@
         version: '{{ branch }}'
         accept_hostkey: yes
         force: yes
+      register: test_status
+      retries: 3
+      delay: 5
+      until: '"stderr" not in test_status'
     #        key_file: "/home/hp  f/.ssh/id_rsa"
     #        update: yes
     #      ignore_errors: yes
@@ -51,31 +55,58 @@
       shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}"  "if [ ! -d /mnt/wwwroot/"{{ project }}" ]; then mkdir -pv /mnt/wwwroot/"{{ project }}"/dist; fi"'
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
 
     - name: scp dist package
       shell: 'scp -P "{{ remote_port }}" -r "{{ project }}".tar.gz "{{ remote_host }}":/mnt/wwwroot/"{{ project }}"'
       args:
         chdir: '{{ workdir }}/{{ project }}'
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
     - name: judge dist dir is exists
       shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "test -d /mnt/wwwroot/"{{ project }}"/dist"'
       ignore_errors: true
       register: is_dist
+      retries: 3
+      delay: 5
+      until: is_dist.stderr == ""
     - name: rename origin dir
       shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "mv /mnt/wwwroot/"{{ project }}"/dist /mnt/wwwroot/"{{ project }}"/dist_$(date +"%Y%m%d%H%M")"'
       when: is_dist.rc == 0
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
     - name: unzip dist package
       shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd /mnt/wwwroot/"{{ project }}"; tar -xf "{{ project }}".tar.gz"'
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
     - name: change owner for dist dir
       shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "chown -R www.www /mnt/wwwroot/"{{ project }}""'
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0
     - name: roll the dir
-      shell:  ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd /mnt/wwwroot/"{{ project }}"; find . -regex './dist_[0-9]*$' -type d | sort -rn | sed -n '6,\$p' | xargs rm -rf "
+      shell: ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd /mnt/wwwroot/"{{ project }}"; find . -regex './dist_[0-9]*$' -type d | sort -rn | sed -n '6,\$p' | xargs rm -rf "
       #      shell:  'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd /mnt/wwwroot/"{{ project }}"; find . -regex "./dist_[0-9]\*$" "'
       args:
         executable: /bin/bash
+      register: test_status
+      retries: 3
+      delay: 5
+      until: test_status.rc == 0

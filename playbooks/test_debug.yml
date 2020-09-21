@@ -6,7 +6,13 @@
     - name: just test
       debug:
         msg: 'haha'
-    - name: ping
-      ping:
     - name: shell test
-      shell: sleep 10
+      shell: sdfdg
+      register: test_status
+      retries: 3
+      delay: 5
+      until: '"stder2r" in test_status'
+      ignore_errors: yes
+    - name: test1
+      debug:
+        msg: test_status
