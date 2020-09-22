@@ -22,7 +22,7 @@
       register: test_status
       retries: 3
       delay: 5
-      until: '"stderr" not in test_status'
+      until: '"msg" not in test_status'
     #        key_file: "/home/hp  f/.ssh/id_rsa"
     #        update: yes
     #      ignore_errors: yes
