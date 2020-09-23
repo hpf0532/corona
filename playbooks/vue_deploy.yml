@@ -26,6 +26,12 @@
     #        key_file: "/home/hp  f/.ssh/id_rsa"
     #        update: yes
     #      ignore_errors: yes
+    - name: register git var
+      shell: "git log --pretty=format:'%an %ai %s' | head -4 | grep -v Merge"
+      args:
+        chdir: '{{ workdir }}/{{ project }}'
+      register: git_log
+
     - name: source profile
       shell: echo $PATH
       args:
