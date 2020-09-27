@@ -27,7 +27,7 @@
     #        update: yes
     #      ignore_errors: yes
     - name: register git var
-      shell: "git log --pretty=format:'%an %ai %s' | head -4 | grep -v Merge"
+      shell: "git log --pretty=format:'%an %ai %s' | head -6 | grep -v Merge | head -1"
       args:
         chdir: '{{ workdir }}/{{ project }}'
       register: git_log
