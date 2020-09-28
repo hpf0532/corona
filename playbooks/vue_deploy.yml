@@ -20,7 +20,7 @@
         accept_hostkey: yes
         force: yes
       register: test_status
-      retries: 3
+      retries: 5
       delay: 5
       until: '"msg" not in test_status'
     #        key_file: "/home/hp  f/.ssh/id_rsa"

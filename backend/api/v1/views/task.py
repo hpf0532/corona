@@ -287,6 +287,7 @@ class TestSSHAPI(MethodView):
         total_time = round(float(time2) - float(time1), 2)
 
         res["time"] = total_time
+        res["timestamp"] = int(datetime.now().timestamp())
 
         return jsonify(res)
 
