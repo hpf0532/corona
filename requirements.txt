@@ -15,7 +15,7 @@ cffi==1.14.0
 chardet==3.0.4
 Click==7.0
 crcmod==1.7
-cryptography==2.8
+cryptography==3.2
 Flask==1.1.1
 Flask-Avatars==0.2.2
 Flask-CeleryExt==0.3.4
