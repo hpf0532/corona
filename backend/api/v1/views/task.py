@@ -196,11 +196,14 @@ class TasksAPI(MethodView):
             playbook = payload["playbook"]
             extra_vars = payload["extra_vars"]
             option = payload['option']
+            is_upload = payload['is_upload']
             if not option: option = None
             if not host or not playbook:
                 return api_abort(400, "参数有误")
         except Exception as e:
             return api_abort(400, "参数有误")
+        if not is_upload:
+            return api_abort(403, "请先上传zip包")
         hosts = Host.query.filter(Host.id.in_(host)).all()
         print(hosts)
         if not hosts:
@@ -315,7 +318,7 @@ class UploadDistAPI(MethodView):
 
     def post(self):
         """上传dist压缩文件接口"""
-        data = {"code": 2000, "msg": ''}
+        data = {"code": 2000, "msg": '', "is_upload": False}
         try:
             project = request.args.get('option')
             file_obj = request.files["files"]
@@ -330,6 +333,7 @@ class UploadDistAPI(MethodView):
                 os.mkdir(upload_path)
 
             file_obj.save(os.path.join(upload_path, "dist.zip"))
+            data["is_upload"] = True
         except Exception as e:
             current_app.logger.error(e)
             data["code"] = 5001
