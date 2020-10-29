@@ -202,18 +202,21 @@ class TasksAPI(MethodView):
                 return api_abort(400, "参数有误")
         except Exception as e:
             return api_abort(400, "参数有误")
-        if not is_upload:
+        playbook = PlayBook.query.get_or_404(playbook)
+
+        # 判断是否需要上传文件
+        if playbook.upload and not is_upload:
             return api_abort(403, "请先上传zip包")
         hosts = Host.query.filter(Host.id.in_(host)).all()
-        print(hosts)
         if not hosts:
             return api_abort(400, "参数有误")
         for host in hosts:
             exec_hosts.append((host.ip, host.port))
 
-        playbook = PlayBook.query.get_or_404(playbook)
+        # 获取playbook名称
         playbook = playbook.name
 
+        # 提交celery执行任务
         ret = AnsibleOpt.ansible_playbook(exec_hosts, playbook, option, extra_vars=extra_vars)
 
         return jsonify(ret)
