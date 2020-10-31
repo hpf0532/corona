@@ -324,7 +324,7 @@ class UploadDistAPI(MethodView):
         data = {"code": 2000, "msg": '', "is_upload": False}
         try:
             project = request.args.get('option')
-            file_obj = request.files["files"]
+            file_obj = request.files["file"]
             if not project:
                 return api_abort(403, "请先选择参数")
             if not file_obj or file_obj.filename.split(".")[-1] != "zip":
