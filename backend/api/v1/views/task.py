@@ -135,6 +135,10 @@ class TaskOptionsAPI(MethodView):
         """任务参数接口"""
         playbook = request.args.get('playbook', type=int)
         env = request.args.get('env', type=int)
+        play_obj = PlayBook.query.filter(PlayBook.id == playbook).first()
+        # 无需配置环境参数
+        if not play_obj.is_env:
+            env = None
         options = Options.query.filter(
             Options.playbook_id == playbook if playbook else text(''),
             Options.env_id == env if env else text('')
