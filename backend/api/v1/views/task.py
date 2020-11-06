@@ -17,9 +17,9 @@ from flask.views import MethodView
 from backend.settings import basedir
 from celery_tasks.tasks import terminate_task
 from backend.api.v1 import api_v1
-from backend.extensions import db
+from backend.extensions import db, redis_conn
 from backend.models import Host, PlayBook, AnsibleTasks, Options, Environment
-from backend.utils.utils import api_abort, validate_env_id, validate_playbook_id, validate_json
+from backend.utils.utils import api_abort, validate_env_id, validate_playbook_id, validate_json, get_task_progress
 from backend.decorators import auth_required, confirm_required, check_stoken
 from backend.api.v1.schemas import tasks_schema, task_detail_schema, flush_task_schema, option_schema, options_schema, \
     envs_schema, task_options_schema
@@ -153,7 +153,8 @@ class TaskAPI(MethodView):
     def get(self, task_id):
         """获取任务详细信息接口"""
         task = AnsibleTasks.query.get_or_404(task_id)
-        return jsonify(task_detail_schema(task))
+        total_step, percentage = get_task_progress(task)
+        return jsonify(task_detail_schema(task, total_step, percentage))
 
 
 class TasksAPI(MethodView):
@@ -232,7 +233,8 @@ class FlushTaskAPI(MethodView):
     def get(self, task_id):
         """轮询task结果接口"""
         task = AnsibleTasks.query.get_or_404(task_id)
-        return jsonify(flush_task_schema(task))
+        total_step, percentage = get_task_progress(task)
+        return jsonify(flush_task_schema(task, total_step, percentage))
 
 
 class StopTaskAPI(MethodView):

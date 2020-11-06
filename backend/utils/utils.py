@@ -160,6 +160,17 @@ def validate_capcha(cap_id, user_cap):
         return False
 
 
+def get_task_progress(task_obj):
+    """获取任务执行进度"""
+    percentage = 0
+    total_step = PlayBook.query.filter(PlayBook.name == task_obj.playbook).first().step
+    over_task_count = redis_conn.llen(task_obj.ansible_id)
+    if total_step:
+        percentage = round((over_task_count / total_step) * 100)
+
+    return True if total_step else False, percentage
+
+
 def model_to_dict(result):
     from collections import Iterable
     # 转换完成后，删除  '_sa_instance_state' 特殊属性

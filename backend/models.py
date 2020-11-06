@@ -91,6 +91,7 @@ class PlayBook(db.Model):
     information = db.Column(db.String(48), nullable=False, unique=True)
     is_env = db.Column(db.Boolean, nullable=False, default=False)
     upload = db.Column(db.Boolean, nullable=False, default=False)
+    step = db.Column(db.Integer, nullable=True)
 
     # 建立一对一关系
     detail = db.relationship('PlayBookDetail', back_populates='playbook', uselist=False, cascade='all')

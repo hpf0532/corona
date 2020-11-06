@@ -6,6 +6,12 @@
 import json
 from flask import url_for
 
+task_status = {
+    1: "primary",
+    2: "success",
+    3: "exception",
+    4: "warning"
+}
 
 def user_schema(user):
     return {
@@ -117,7 +123,7 @@ def task_schema(task):
     }
 
 
-def task_detail_schema(task):
+def task_detail_schema(task, total_step, percentage):
     return {
         'id': task.id,
         'kind': 'TaskDetail',
@@ -131,7 +137,10 @@ def task_detail_schema(task):
         'playbook': task.playbook,
         'state': task.state.value,
         'create_time': int(task.create_time.timestamp()),
-        'cancelled': task.cancelled
+        'cancelled': task.cancelled,
+        'progress': total_step,
+        'percentage': percentage,
+        'task_status': task_status[task.state]
 
     }
 
@@ -159,11 +168,14 @@ def mytask_schema(items):
     }
 
 
-def flush_task_schema(task):
+def flush_task_schema(task, total_step, percentage):
     return {
         'ansible_result': json.loads(task.ansible_result) if task.ansible_result else None,
         'celery_result': json.loads(task.celery_result) if task.celery_result else None,
-        'cancelled': task.cancelled
+        'cancelled': task.cancelled,
+        'progress': total_step,
+        'percentage': percentage,
+        'task_status': task_status[task.state]
     }
 
 
