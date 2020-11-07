@@ -166,7 +166,7 @@ def get_task_progress(task_obj):
     total_step = PlayBook.query.filter(PlayBook.name == task_obj.playbook).first().step
     progress = True if total_step else False
     # 已完成的任务进度为100
-    if task_obj.status.val == 2:
+    if task_obj.state.code == 2:
         percentage = 100
         return progress, percentage
     # 获取未完成的任务
