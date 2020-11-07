@@ -153,6 +153,7 @@ class TaskAPI(MethodView):
     def get(self, task_id):
         """获取任务详细信息接口"""
         task = AnsibleTasks.query.get_or_404(task_id)
+        # 获取任务进度
         total_step, percentage = get_task_progress(task)
         return jsonify(task_detail_schema(task, total_step, percentage))
 

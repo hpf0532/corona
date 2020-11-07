@@ -164,11 +164,17 @@ def get_task_progress(task_obj):
     """获取任务执行进度"""
     percentage = 0
     total_step = PlayBook.query.filter(PlayBook.name == task_obj.playbook).first().step
+    progress = True if total_step else False
+    # 已完成的任务进度为100
+    if task_obj.status.val == 2:
+        percentage = 100
+        return progress, percentage
+    # 获取未完成的任务
     over_task_count = redis_conn.llen(task_obj.ansible_id)
     if total_step:
         percentage = round((over_task_count / total_step) * 100)
 
-    return True if total_step else False, percentage
+    return progress, percentage
 
 
 def model_to_dict(result):
