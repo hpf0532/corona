@@ -209,6 +209,17 @@ class TasksAPI(MethodView):
         except Exception as e:
             return api_abort(400, "参数有误")
         playbook = PlayBook.query.get_or_404(playbook)
+        #
+        # # 判断执行队列中是否有该任务
+        # # 1 正在执行 2 待执行
+        # if option:
+        #     option_obj = Options.query.get_or_404(option)
+        #     print(option_obj.name)
+        #     option_name = option_obj.name
+        #     task_state = redis_conn.get(option_name)
+        #     redis_conn.set(option_name, 1)
+        #     if task_state.decode() == '1':
+        #         return api_abort(403, "{} 任务正在发布中".format(option_name))
 
         # 判断是否需要上传文件
         if playbook.upload and not is_upload:

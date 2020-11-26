@@ -28,7 +28,7 @@ celery_logger = get_task_logger(__name__)
 # 导入 ansible api
 from ansible_api import ansible_playbook_api, ansible_exec_api
 from backend.models import AnsibleTasks
-from backend.extensions import db
+from backend.extensions import db, redis_conn
 from backend.settings import BaseConfig, POOL
 from celery_tasks import celery, MyTask
 from backend.utils.validate_task import task_verify
@@ -93,9 +93,13 @@ def sync_ansible_result(self, ret, *a, **kw):  # 执行结束，结果保持至d
         # celery_logger.info("------------ %s" % current_app.name)
         if tid:
             task_obj = save_to_db(tid)
+            option = task_obj.option.name if task_obj.option else ""
+            # if option:
+            #     celery_logger.info("================{}".format(option))
+            #     redis_conn.set(option, 2)
             data_dict = {
                 "user": task_obj.user.username,
-                "option": task_obj.option.name if task_obj.option else "",
+                "option": option,
                 "playbook": task_obj.playbook,
                 "create_time": task_obj.create_time,
                 "ansible_id": task_obj.ansible_id,
@@ -136,6 +140,9 @@ def terminate_task(self, cid):
         try:
             task_obj = AnsibleTasks.query.filter(AnsibleTasks.celery_id == cid).first()
             if task_obj:
+                # option = task_obj.option.name if task_obj.option else ""
+                # if option:
+                #     redis_conn.set(option, 2)
                 task_obj.state = 4
                 task_obj.ansible_result = json.dumps({"status": "任务取消"})
                 task_obj.celery_result = json.dumps({"status": "任务取消"})

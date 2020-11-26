@@ -254,7 +254,7 @@ def forget_password():
         email = request.json["email"]
         user = User.query.filter_by(email=email).first()
         if not user:
-            return api_abort(400, "邮箱错误")
+            return api_abort(400, "邮箱未注册")
         token = gen_token(user=user, operation=Operations.RESET_PASSWORD, expire_in=3600)
         send_reset_password_email(user=user, token=token, domain=domain)
         return jsonify({"code": 20003, "message": "重置密码邮件已发送"})
