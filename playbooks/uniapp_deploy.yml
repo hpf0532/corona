@@ -17,7 +17,7 @@
       until: test_status.rc == 0
 
     - name: unzip dist package
-      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; unzip dist.zip &>/dev/null"'
+      shell: 'ssh -p "{{ remote_port }}" "{{ remote_host }}" "cd "{{ remote_dir }}"; unzip dist.zip"'
       args:
         executable: /bin/bash
       register: test_status
