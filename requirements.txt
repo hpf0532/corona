@@ -19,7 +19,7 @@ cryptography==2.8
 Flask==1.1.1
 Flask-Avatars==0.2.2
 Flask-CeleryExt==0.3.4
-Flask-Cors==3.0.8
+Flask-Cors==3.0.9
 Flask-Limiter==1.2.1
 Flask-Mail==0.9.1
 Flask-Migrate==2.5.2
