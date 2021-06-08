@@ -37,7 +37,7 @@ MarkupSafe==1.1.1
 marshmallow==3.5.1
 oss2==2.10.0
 paramiko==2.7.1
-Pillow==7.1.1
+Pillow==8.2.0
 pycparser==2.19
 pycryptodome==3.9.7
 PyJWT==1.7.1
