@@ -9,7 +9,7 @@ beautifulsoup4==4.9.1
 bcrypt==3.1.7
 billiard==3.6.3.0
 blinker==1.4
-celery==4.4.1
+celery==5.2.2
 certifi==2020.4.5.1
 cffi==1.14.0
 chardet==3.0.4
