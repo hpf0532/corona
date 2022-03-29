@@ -36,7 +36,7 @@ Mako==1.1.2
 MarkupSafe==1.1.1
 marshmallow==3.5.1
 oss2==2.10.0
-paramiko==2.7.1
+paramiko==2.10.1
 Pillow==7.1.1
 pycparser==2.19
 pycryptodome==3.9.7
