@@ -32,7 +32,7 @@ Jinja2==2.11.1
 jmespath==0.9.5
 kombu==4.6.8
 limits==1.5.1
-Mako==1.1.2
+Mako==1.2.2
 MarkupSafe==1.1.1
 marshmallow==3.5.1
 oss2==2.10.0
