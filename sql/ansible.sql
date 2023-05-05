@@ -44,6 +44,7 @@ CREATE TABLE `ansibletask` (
   `state` int(11) NOT NULL COMMENT '任务状态',
   `user_id` int(11) DEFAULT NULL,
   `option_id` int(11) DEFAULT NULL,
+  `cancelled` tinyint(1) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `ansible_id` (`ansible_id`),
   UNIQUE KEY `celery_id` (`celery_id`),
@@ -129,6 +130,7 @@ CREATE TABLE `playbook` (
   `information` varchar(48) NOT NULL,
   `is_env` tinyint(1) NOT NULL,
   `upload` tinyint(1) NOT NULL,
+  `step` int(11) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `name` (`name`),
   UNIQUE KEY `information` (`information`)
